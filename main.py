@@ -1,12 +1,17 @@
 from agent import Agent
+import tools
+from dotenv import load_dotenv
 
 if __name__ == "__main__":
-    agent = Agent(base_url="https://api.deepseek.com/")
-    print(agent.send_message(
-        """
- Now you are running inside python script. 
-"""
-    ))
+    load_dotenv()
+    agent = Agent(base_url="https://api.deepseek.com/beta")
 
-    print()
-    print(agent.get_messages())
+    while True:
+        if agent.wait_prompt:
+            msg = input("Задавай свой вопрос: ")
+            print(agent.send_message(msg))
+        else:
+            print(agent.using_tools())
+
+
+
