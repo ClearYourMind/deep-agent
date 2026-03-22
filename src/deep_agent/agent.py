@@ -4,11 +4,37 @@ import os
 import tools
 
 
+class ContextPool:
+    def __init__(self, init_message):
+        self._messages = [init_message]
+        self._max_length = 10000
+        self.overflow = False
+
+    def get_context_length(self):
+        result_length = 0
+        for msg in self._messages:
+            result_length += len(msg["content"])
+        return result_length
+
+    def append(self, message):
+        self._messages.append(message)
+        if self.get_context_length() > self._max_length:
+            self.compress_context()
+            self.overflow = True
+
+    def compress_context(self):
+        print("\t !!! Context max length overflow. It should be compressed !!!")
+        pass
+
+    def get_messages(self):
+        return self._messages[:]
+
+
 class Agent:
     def __init__(self, base_url):
         print("Initializing Agent...")
         self._client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY'), base_url=base_url)
-        self._messages = [{"role": "system", "content": "Now is Feb 2026"}]
+        self._messages = ContextPool({"role": "system", "content": "When you are asked for searching the web, you should consider today's date"})
         self._last_response: ChatCompletion = None
         self.wait_prompt = True
 
@@ -16,7 +42,7 @@ class Agent:
         print("Thinking...")
         response = self._client.chat.completions.create(
             model="deepseek-chat",
-            messages=self._messages,
+            messages=self._messages.get_messages(),
             tools=tools.tool_list,
             stream=False,
             max_tokens=800
@@ -31,7 +57,7 @@ class Agent:
         if calls:
             self.wait_prompt = False
 
-        return self._last_response.choices[0].message.model_dump()["content"]
+        return self._last_response.choices[0].message.content
 
     def get_messages(self):
         message_list = ''
@@ -60,5 +86,5 @@ class Agent:
                 })
                 self.model_request()
 
-        return self._last_response.choices[0].message.model_dump()["content"]
+        return self._last_response.choices[0].message.content
 
