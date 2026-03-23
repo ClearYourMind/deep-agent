@@ -3,7 +3,7 @@ import requests
 import json
 
 max_search_result_length = 3000
-max_page_content_length = 5000
+max_page_content_length = 7000
 
 
 def search_web(**kwargs):
@@ -25,13 +25,6 @@ def search_web(**kwargs):
     return str(result["organic"][:max_search_result_length])
 
 
-def complete(**kwargs):
-
-    print("called 'complete' tool!")
-    print("argument passed: 'final_thought' = " + kwargs.get("final_thought", "--not used--"))
-    return kwargs.get("final_thought", "")
-    
-    
 def think(**kwargs):
     print("called 'think' tool!")
     print("argument passed: 'analysis' = " + kwargs["analysis"])
@@ -61,14 +54,15 @@ def browse_url(**kwargs):
     }
 
     response = requests.request("POST", url, headers=headers, json=payload)
+
     result = json.loads(response.text)
-    if "text" in result:
-        if len(result["text"]) > max_page_content_length:
-            result["text"] = (result["text"][:max_page_content_length] + "... <truncated>")
-        print("Browse tool result:\n\n" + result["text"] + "\n")
-        return result["text"]
-    # else:
-    return "Failed to get web page content. Please try another URL"
+    if "markdown" in result:
+        if len(result["markdown"]) > max_page_content_length:
+            result["markdown"] = (result["text"][:max_page_content_length] + "... <truncated>")
+        print("Browse tool result:\n\n" + result["markdown"] + "\n")
+        return result["markdown"]
+    else:
+        return "Failed to get web page content. Please try another URL"
 
 
 tool_list = [
@@ -76,20 +70,13 @@ tool_list = [
         "type": "function",
         "function": {
             "name": "search_web",
-            "description": """
-                Performs Google search to find most actual information.
-                Along with thought about your next step please specify following information:
-                - summary of search results containing only relevant information for current task.
-                - one or two urls if you are going to visit some links from search results.
-                That information will remain in message history while other search results will be erased.
-                NOTE: snippets of multiple search results may already contain desired info, so actual visiting links is not nessesary in most cases
-            """,
+            "description": "Performs a Google search and returns results with titles, snippets, and URLs. Use this when you need current or external information. After receiving results, you must summarize the relevant findings in your response, as the raw search results may be removed from history.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "Google search phrase",
+                    "description": "The search query. Use specific, well‑formed phrases."
                     }
                 },
                 "required": ["query"]
@@ -100,19 +87,13 @@ tool_list = [
         "type": "function",
         "function": {
             "name": "browse_url",
-            "description": """
-                View content of web-page at specified URL converted to minimalist markdown format. It can be truncated if contents exceed 5000 characters.
-                Along with thought about your next step please specify following information:
-                - summary of content that you are provided containing only information that is relevant to current task in one or two sentences.
-                That summary will persist in message history, while all web-page content will be erased.
-                NOTE: It doesn't return full HTML content.
-            """,
+            "description": "Fetches the content of a URL and converts it to minimalist Markdown (truncated if over 7000 characters). Use this to retrieve detailed information from a specific page. After receiving content, summarize the relevant parts in your response; the full page content may be discarded from history.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "url": {
                         "type": "string",
-                        "description": "URL address of page to read content of",
+                        "description": "Full URL of the page to read."
                     }
                 },
                 "required": ["url"]
@@ -122,47 +103,14 @@ tool_list = [
     {
         "type": "function",
         "function": {
-            "name": "complete",
-            "description": """
-                FINAL action - call this ONLY when you are ready to provide the final answer.
-                Please summarize the work that has been done during completing task, what actions has been taken and the final result in short.
-                **Example compression:**
-
-                ```
-                The user requested the current date and year.
-
-                Actions performed:
-                1. Search "current date and year today" - 10 results found, key information: March 22, 2026
-                2. Visit https://calendar.yoip.ru/today.html - confirmation: Sunday, March 22, 2026
-
-                Result: today is March 22, 2026 (Sunday)
-                ```
-                That summary will persist in message history while all previous messages are likely to be removed to keep message history as short as possible.
-                Please do not invoke any other function call after calling this action, because no other action is neeeded.
-            """,
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "final_thought": {
-                        "type": "string",
-                        "description": "Result of a completed task as summary of performed actions"
-                    },
-                },
-                "required": ["final_thought"]
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
             "name": "think",
-            "description": "Just reasoning step with no actions",
+            "description": "Use this to record internal reasoning steps without performing any external action. Optional; you can also reason directly in your response.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "analysis": {
                         "type": "string",
-                        "description": "Your thoughts about the reasoning process and current task. Feel free to pass here anything you want"
+                        "description": "Your internal thoughts about the task, plan, or reasoning."
                     },
                 },
                 "required": ["analysis"]
@@ -173,13 +121,13 @@ tool_list = [
         "type": "function",
         "function": {
             "name": "ask_clarification",
-            "description": "Call this to get clarification about current task or some other information from user. Additional opportunity to talk to user and ask about anything you want",
+            "description": "Call this when the user's request is ambiguous, missing details, or when you need additional information before proceeding. Use a concise question.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "question": {
                         "type": "string",
-                        "description": "A short form of your question that user should answer"
+                        "description": "The question to ask the user. Keep it short and specific."
                     },
                 },
                 "required": ["question"]
@@ -192,6 +140,5 @@ tool_functions = {
     "search_web": search_web,
     "browse_url": browse_url,
     "think": think,
-    "ask_clarification": ask_clarification,
-    "complete": complete
+    "ask_clarification": ask_clarification
 }

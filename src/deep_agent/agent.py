@@ -2,7 +2,7 @@ from openai import OpenAI, ChatCompletion
 import json
 import os
 
-max_content_length_truncate = 1000
+# max_content_length_truncate = 1000
 
 
 class ContextPool:
@@ -34,8 +34,6 @@ class ContextPool:
         for msg in self._messages:
             if msg["role"] == "tool":
                 msg["content"] = ""
-            else:
-                msg["content"] = (msg["content"][:max_content_length_truncate])
         self.overflow = False
 
     def get_messages(self):
@@ -43,12 +41,10 @@ class ContextPool:
         return result
 
     def update_important_messages(self, clear_history=False):
-        msg = self._messages[-2]
-        if (msg["role"] == "tool") and (msg["name"] == "complete"):
-            self._important_messages.append(self._messages[-1])
-            if clear_history:
-                self._messages = self._important_messages[:]
-                self.overflow = False
+        self._important_messages.append(self._messages[-1])
+        if clear_history:
+            self._messages = self._important_messages[:]
+            self.overflow = False
 
 
 import tools
@@ -58,10 +54,47 @@ class Agent:
         print("Initializing Agent...")
         self._client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY'), base_url=base_url)
         self._messages = ContextPool({"role": "system", "content":
-            """
-                You are run inside a python-script as interactive agent.
-                Main intention is to achieve minimal token cost while maintaining full message history context as much as possible
-            """
+"""
+**VALUES**
+- Keep conversation context concise and high‑level.
+- Extract and retain only essential insights from tool outputs.
+- Base reasoning on your own analysis, not on raw tool outputs.
+- Act efficiently: prefer a minimal set of tool calls.
+
+**CONTEXT MANAGEMENT**
+- Tool results (`search_web`, `browse_url`) may be removed from history to save tokens.
+- Your own messages, especially summaries you write, are the only content guaranteed to persist.
+- After each tool call, **immediately summarize** the key findings relevant to the user’s question. This summary will preserve important information even if the raw results are later discarded.
+- Keep your summaries concise but informative.
+
+**TOOL USAGE GUIDELINES**
+- `search_web`: Use when you need current or external information. After receiving results, provide a short summary of relevant facts and mention any URLs you intend to visit next.
+- `browse_url`: Use to read a specific page. After receiving content, summarize only the parts that matter for the task.
+- `think`: Optional – use it to record internal reasoning steps without performing an action. You can also reason directly in your response.
+- `ask_clarification`: Use when the user’s request is ambiguous or missing necessary details. Ask a short, specific question.
+
+**WORKFLOW**
+1. Understand the user’s question.
+2. If external information is needed, call `search_web` and/or `browse_url`.
+3. After each tool, write a brief summary of the relevant insights.
+4. Repeat as necessary. When you have enough information to answer, produce the final answer as summary of specific format.
+
+**FINAL ANSWER FORMAT**
+When you have completed all necessary research and are ready to deliver the final answer, **output your final message in the following structured summary format**:
+The user requested [brief restatement of the original question].
+
+Actions performed:
+
+[Action type and details] - [key information obtained]
+[Action type and details] - [key information obtained]
+...
+
+Result: [concise final answer]
+
+This summary will be the only message retained in the conversation history after the task is complete. All previous tool results and intermediate messages may be discarded. Therefore, ensure this summary contains all essential information about what you did and the final outcome.
+
+Do not call any tool after delivering this final summary. The absence of further tool calls signals completion.
+"""
         })
         self._last_response: ChatCompletion = None
         self.wait_prompt = True
