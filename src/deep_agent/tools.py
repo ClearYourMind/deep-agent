@@ -9,7 +9,8 @@ max_page_content_length = 7000
 def search_web(**kwargs):
     print("called 'search_web' tool!")
     print("argument passed: 'query' = " + kwargs["query"])
-    
+
+    helper_agent = kwargs.get("helper_agent", None)
     url = "https://google.serper.dev/search"
     payload = {
         'q': kwargs["query"]
@@ -18,11 +19,34 @@ def search_web(**kwargs):
         'X-Api-Key': os.environ.get("SERPER_API_KEY"),
         'Content-Type': 'application/json',
     }
-
     response = requests.request("POST", url, headers=headers, json=payload)
-    result = json.loads(response.text)
-    print("search tool result:\n\n" + str(result["organic"][:max_search_result_length]) + "\n")
-    return str(result["organic"][:max_search_result_length])
+
+    response_dict = json.loads(response.text)
+    result = str(response_dict["organic"])
+
+    if helper_agent:
+        #       compress result
+        helper_message = f"""
+    **TASK:**
+    {kwargs["user_request"]}
+
+    **ACTION:**
+     - SEARCH
+
+    **QUERY:**
+    {kwargs["query"]}
+
+    **RESULT:**
+    {result}
+"""
+        result = helper_agent.send_message(helper_message, output=True)
+    else:
+        #       return raw result
+        if len(result) > max_search_result_length:
+            result = result[:max_search_result_length] + ' ... <truncated>'
+
+    print("\n\nSearch tool result:\n\n", result, "\n")
+    return result
 
 
 def think(**kwargs):
@@ -42,6 +66,7 @@ def browse_url(**kwargs):
     print("called 'browse_url' tool!")
     print("argument passed: 'url' = " + kwargs["url"])
     
+    helper_agent = kwargs.get("helper_agent", None)
     url = "https://scrape.serper.dev"
 
     payload = {
@@ -55,12 +80,29 @@ def browse_url(**kwargs):
 
     response = requests.request("POST", url, headers=headers, json=payload)
 
-    result = json.loads(response.text)
-    if "markdown" in result:
-        if len(result["markdown"]) > max_page_content_length:
-            result["markdown"] = (result["text"][:max_page_content_length] + "... <truncated>")
-        print("Browse tool result:\n\n" + result["markdown"] + "\n")
-        return result["markdown"]
+    response_dict = json.loads(response.text)
+    if "markdown" in response_dict:
+        result = response_dict["markdown"]
+        if helper_agent:
+            #       compress result
+            helper_message = f"""
+    **TASK:**
+    {kwargs["user_request"]}
+
+    **ACTION:**
+     - BROWSE
+
+    **CONTENT:**
+    {response_dict["markdown"]}
+
+"""
+            result = helper_agent.send_message(helper_message, output=True)
+        else:
+            #       return raw result
+            if len(result) > max_page_content_length:
+                result = result[:max_page_content_length] + "... <truncated>"
+        print("\n\nBrowse tool result:\n\n" + result + "\n")
+        return result
     else:
         return "Failed to get web page content. Please try another URL"
 
@@ -70,7 +112,7 @@ tool_list = [
         "type": "function",
         "function": {
             "name": "search_web",
-            "description": "Performs a Google search and returns results with titles, snippets, and URLs. Use this when you need current or external information. After receiving results, you must summarize the relevant findings in your response, as the raw search results may be removed from history.",
+            "description": "Performs a Google search and returns results with titles, snippets, and URLs. Use this when you need current or external information.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -87,7 +129,7 @@ tool_list = [
         "type": "function",
         "function": {
             "name": "browse_url",
-            "description": "Fetches the content of a URL and converts it to minimalist Markdown (truncated if over 7000 characters). Use this to retrieve detailed information from a specific page. After receiving content, summarize the relevant parts in your response; the full page content may be discarded from history.",
+            "description": "Fetches the content of a URL and returns it in short summarized form. Use this to retrieve relative information from a specific page.",
             "parameters": {
                 "type": "object",
                 "properties": {
