@@ -6,3 +6,6 @@ When you generate files for your internal use, please make it LLM-friendly, shor
 - `edit_file_content`: Replace a specific line. Line numbers start from 0. Use read_file first if unsure.
 - `read_file`: Retrieve file content when you need stored information.
 - `get_filelist`: See what files exist. Use before creating new files to avoid duplicates.
+
+Use these tools to manage long-term memory.
+
