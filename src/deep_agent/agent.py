@@ -77,7 +77,7 @@ class Agent:
             messages=[self._system_prompt] + self._messages.get_messages(),
             tools=tools.tool_list if self.use_tools else [],
             stream=False,
-            max_tokens=800
+            max_tokens=1000
         )
         self._messages.append(response.choices[0].message.model_dump())
         self.last_response = response
@@ -103,14 +103,26 @@ class Agent:
 
     def _use_tool(self, tool) -> str:
         func = tool.function
+        is_argument_parsing_success = True
         print(self.name + " Using tool '" + func.name + "' ...")
-        args = json.loads(tool.function.arguments)
-        #       add helper_agent into function arguments
-        if self._helper_agent:
-            args["helper_agent"] = self._helper_agent
-            args["user_request"] = self.last_user_request
+        try:
+            args = json.loads(tool.function.arguments)
+        except json.decoder.JSONDecodeError as e:
+            is_argument_parsing_success = False
+            print("\n\nEncountered an issue with parsing arguments")
+            with open('last_error.log', 'w') as f:
+                f.write(str(e)+'\n')
+                f.write(tool.function.arguments)
 
-        result = tools.tool_functions[func.name](**args)
+        if is_argument_parsing_success:
+            #       add helper_agent into function arguments
+            if self._helper_agent:
+                args["helper_agent"] = self._helper_agent
+                args["user_request"] = self.last_user_request
+            result = tools.tool_functions[func.name](**args)
+        else:
+            result = "Erroneous argument. Maybe it is too long. Please remember about token limitation."
+
         return result
 
     def using_tools(self):

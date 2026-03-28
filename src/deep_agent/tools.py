@@ -147,7 +147,7 @@ tool_list = [
         "type": "function",
         "function": {
             "name": "think",
-            "description": "Use this to record internal reasoning steps without performing any external action. Optional; you can also reason directly in your response.",
+            "description": "Use this to record internal reasoning steps without performing any external action. Keep plans, structure, and analysis here — do not write this content to files or output it as the final answer. Optional; you can also reason directly in your response.",
             "parameters": {
                 "type": "object",
                 "properties": {
