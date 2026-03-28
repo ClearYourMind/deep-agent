@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+from MASTERMIND.extended_tools import extended_tool_functions, extended_tool_list
 
 max_search_result_length = 3000
 max_page_content_length = 7000
@@ -118,7 +119,7 @@ tool_list = [
                 "properties": {
                     "query": {
                         "type": "string",
-                    "description": "The search query. Use specific, well‑formed phrases."
+                        "description": "The search query. Use specific, well‑formed phrases."
                     }
                 },
                 "required": ["query"]
@@ -176,11 +177,12 @@ tool_list = [
             },
         },
     },
-]
+] + extended_tool_list
 
 tool_functions = {
     "search_web": search_web,
     "browse_url": browse_url,
     "think": think,
-    "ask_clarification": ask_clarification
+    "ask_clarification": ask_clarification,
+    **extended_tool_functions
 }

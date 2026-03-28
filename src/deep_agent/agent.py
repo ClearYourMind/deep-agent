@@ -128,8 +128,8 @@ class Agent:
                 })
                 self.model_request()
             else: 
-                # task complete. End of tool-calling loop
-                #self._messages.update_important_messages(clear_history=True)
+                #       task complete. End of tool-calling loop
+                self._messages.update_important_messages(clear_history=True)
                 print("\n\n")
                 print(self.name, " Message history:\n")
                 print(self.get_messages())
