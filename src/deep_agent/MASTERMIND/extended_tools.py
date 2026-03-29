@@ -1,8 +1,10 @@
 import requests
 import json
 import os
+from mrkdwn_analysis import MarkdownAnalyzer
 
 workdir = "src/deep_agent/MASTERMIND/"
+#workdir = "MASTERMIND/"
 
 
 def create_file(**kwargs):
@@ -61,7 +63,7 @@ def edit_file_content(**kwargs):
     return result
 
 
-def read_file(**kwargs):
+def load_entire_file(**kwargs):
     result = "<failed to open file>"
     print('arguments:', kwargs["filename"])
 
@@ -70,6 +72,62 @@ def read_file(**kwargs):
             result = f.read()
     except Exception as e:
         result = f"Error reading file: {str(e)}"
+
+    print("\nFile tool result:", result, "\n\n")
+    return result
+
+
+def read_file(**kwargs):
+    filename = kwargs["filename"]
+    section_name = kwargs.get("section", None)
+    print('arguments:', filename, "section:", str(section_name))
+    markdown = MarkdownAnalyzer(workdir + filename)
+    headers = markdown.identify_headers()
+    sections = {}
+    lines = []
+    with open(workdir + filename, 'r') as f:
+        lines = f.readlines()
+    line_count = len(lines)
+
+    #fill in sections
+    current_section = None
+    try:
+        for header in headers["Header"]:
+            if current_section:
+                current_section["end"] = header["line"] - 1
+                sections[current_section["text"]] = current_section
+
+            current_section = {
+                "text": header["text"],
+                "level": header["level"],
+                "start": header["line"],
+                "end": None
+            }
+        if current_section:
+            current_section["end"] = line_count - 1
+            sections[current_section["text"]] = current_section
+    except KeyError as e:
+        result = "File doesn't contain markdown. Use `load_entire_file` instead"
+        print("\nFile tool result:", result, "\n\n")
+        return result
+
+    if section_name:
+        result = "No such section: " + section_name
+        section = sections.get(section_name, None)
+        if section:
+            result = ''
+            for i in range(section["start"], section["end"]):
+                result += lines[i]
+    else:
+        toc = ''
+        # return table of contents
+        for header in headers["Header"]:
+            if header["level"] < 3:
+                toc +=f"{" "*header["level"]} - {header["text"]} ({header["line"]}) \n"
+        if toc:
+            result = toc
+        else:
+            result = "File doesn't contain markdown. Use `load_entire_file` instead"
 
     print("\nFile tool result:", result, "\n\n")
     return result
@@ -177,13 +235,34 @@ extended_tool_list = [
         "type": "function",
         "function": {
             "name": "read_file",
-            "description": "Reads the entire content of a specified file. Use this to retrieve stored memory or information.",
+            "description": "Reads file's TOC or portion of the file contents in specified section.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "filename": {
                         "type": "string",
                         "description": "Name of the file to read."
+                    },
+                    "section": {
+                        "type": "string",
+                        "description": "Section to dive into. Use plain text."
+                    },
+                },
+                "required": ["filename"]
+            },
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "load_entire_file",
+            "description": "Reads the entire content of a specified file. Use this to retrieve stored memory or information.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Name of the file to load into context."
                     },
                 },
                 "required": ["filename"]
@@ -226,6 +305,7 @@ extended_tool_functions = {
     "append_file": append_file,
     "edit_file_content": edit_file_content,
     "read_file": read_file,
+    "load_entire_file": load_entire_file,
     "get_filelist": get_filelist,
     "delete_file": delete_file
 }
