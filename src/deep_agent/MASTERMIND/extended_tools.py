@@ -33,7 +33,7 @@ def append_file(**kwargs):
     except Exception as e:
         result = f"Error appending to file: {str(e)}"
 
-    print("\n\nFile tool result:", result, "\n")
+    print("\nFile tool result:", result, "\n\n")
     return result
 
 
@@ -57,7 +57,7 @@ def edit_file_content(**kwargs):
     except Exception as e:
         result = f"Error editing file: {str(e)}"
 
-    print("\n\nFile tool result:", result, "\n")
+    print("\nFile tool result:", result, "\n\n")
     return result
 
 
@@ -71,7 +71,7 @@ def read_file(**kwargs):
     except Exception as e:
         result = f"Error reading file: {str(e)}"
 
-    print("\n\nFile tool result:", result, "\n")
+    print("\nFile tool result:", result, "\n\n")
     return result
 
 
@@ -83,6 +83,24 @@ def get_filelist(**kwargs):
         result = f"Error reading directory: {str(e)}"
 
     print("\n\nFile tool result:", result, "\n")
+    return result
+
+
+def delete_file(**kwargs):
+    print('arguments:', kwargs["filename"])
+
+    filename = kwargs["filename"]
+    user_reply = input(f"Confirm deletion of {filename} (Y/n)")
+    if user_reply == "Y":
+        try:
+            os.remove(workdir + filename)
+            result = f"File '{filename}' deleted"
+        except Exception as e:
+            result = f"Error: {str(e)}"
+    else:
+        result = "User has rejected deletion"
+
+    print("File tool result:", result, "\n\n")
     return result
 
 
@@ -182,7 +200,24 @@ extended_tool_list = [
                 "properties": {},
             },
         }
-    }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "delete_file",
+            "description": "Deletes specified file",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Name of the file to delete."
+                    },
+                },
+                "required": ["filename"]
+            },
+        }
+    },
 ]
 
 
@@ -191,5 +226,6 @@ extended_tool_functions = {
     "append_file": append_file,
     "edit_file_content": edit_file_content,
     "read_file": read_file,
-    "get_filelist": get_filelist
+    "get_filelist": get_filelist,
+    "delete_file": delete_file
 }
