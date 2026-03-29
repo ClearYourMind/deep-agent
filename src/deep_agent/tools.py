@@ -28,13 +28,11 @@ def search_web(**kwargs):
     if helper_agent:
         #       compress result
         helper_message = f"""
-    **TASK:**
-    {kwargs["user_request"]}
+    **TASK**: {kwargs["user_request"]}
 
-    **ACTION:**
-     - SEARCH
+    **ACTION**: SEARCH
 
-    **QUERY:**
+    **QUERY**
     {kwargs["query"]}
 
     **RESULT:**
@@ -87,13 +85,11 @@ def browse_url(**kwargs):
         if helper_agent:
             #       compress result
             helper_message = f"""
-    **TASK:**
-    {kwargs["user_request"]}
+    **TASK**: {kwargs["user_request"]}
 
-    **ACTION:**
-     - BROWSE
+    **ACTION:** BROWSE
 
-    **CONTENT:**
+    **CONTENT**:
     {response_dict["markdown"]}
 
 """

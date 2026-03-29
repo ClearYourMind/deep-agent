@@ -9,7 +9,6 @@ import tools
 class ContextPool:
     def __init__(self):
         self._messages = []
-        self._important_messages = []
         self._max_length = 10000
         self.overflow = False
 
@@ -25,33 +24,38 @@ class ContextPool:
     def append(self, message):
         self._messages.append(message)
         if self.get_context_length() > self._max_length:
-            self.compress_context_midtask()
+            print("\t !!! Context max length overflow. It should be compressed !!!")
             self.overflow = True
         else:
             self.overflow = False
-
-    def compress_context_midtask(self):
-        print("\t !!! Context max length overflow. It should be compressed !!!")
-        ...
-        # for msg in self._messages:
-        #     if msg["role"] == "tool":
-        #         msg["content"] = ""
-        # self.overflow = False
 
     def get_messages(self):
         result = self._messages[:]
         return result
 
+    def get_chat_history(self):
+        message_list = ''
+        for message in self._messages:
+            message_list += " >> " + message["role"] + ": " + message["content"] + "\n\n"
+        return message_list
+
     def assign_messages(self, messages):
         self._messages = messages[:]
 
-    def update_important_messages(self, clear_history=False):
-        #       adds last message to important messages
-        self._important_messages.append(self._messages[-1])
-        if clear_history:
-            self._messages = self._important_messages[:]
-            self.overflow = False
+    def compress_context(self, helper_agent):
+        print('\n\n ..Context compression started..')
+        self.overflow = False
+        if helper_agent:
+            print('\n\n ..Context compression started..')
+            helper_message = """
+**ACTION**: COMPRESS
 
+**CONTENT**:
+"""
+            helper_message += self.get_chat_history()
+            result = helper_agent.send_message(helper_message, output=True)
+            print("\nCompressed context:\n", result)
+            self.assign_messages([{"role": "system", "name": "COMPRESSOR", "content": result}])
 
 class Agent:
     def __init__(self, name, base_url="https://api.deepseek.com/beta", system_prompt="", use_tools=True):
@@ -93,12 +97,6 @@ class Agent:
 
         return self.last_response.choices[0].message.content if output else None
 
-    def get_messages(self):
-        message_list = ''
-        for message in self._messages.get_messages():
-            message_list += "\n\n >> " + message["role"] + ": " + message["content"]
-        return message_list
-
     def clear_message_history(self):
         self._messages.assign_messages([])
 
@@ -125,7 +123,7 @@ class Agent:
                 args["user_request"] = self.last_user_request
             result = tools.tool_functions[func.name](**args)
         else:
-            result = "Encountered JSONDecoreError during parsing arguments. Erroneous argument. Maybe it is too long. Please remember about token limitation."
+            result = "Encountered JSONDecodeError during parsing arguments. Erroneous argument. Maybe it is too long. Please remember about token limitation."
 
         return result
 
@@ -145,9 +143,10 @@ class Agent:
                 self.model_request()
             else: 
                 #       task complete. End of tool-calling loop
-                # self._messages.update_important_messages(clear_history=True)
                 with open('message_history.md', 'w') as f:
-                    f.write(self.get_messages())
+                    f.write(self._messages.get_chat_history())
+                if self._messages.overflow:
+                    self._messages.compress_context(self._helper_agent)
 
         return self.last_response.choices[0].message.content
 

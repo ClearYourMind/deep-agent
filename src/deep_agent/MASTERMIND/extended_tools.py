@@ -109,7 +109,7 @@ extended_tool_list = [
         "type": "function",
         "function": {
             "name": "create_file",
-            "description": "Creates a new file in the MASTERMIND directory. Use this to initialize a file. If you have a large amount of content to write, keep the initial content empty or short, then use append_file to add content in smaller portions to avoid exceeding token limits.",
+            "description": "Creates a new file in the MASTERMIND directory. Use this to initialize a file. Use append_file to add content in smaller portions to avoid exceeding token limits.",
 
             "parameters": {
                 "type": "object",
@@ -120,7 +120,7 @@ extended_tool_list = [
                     },
                     "initial_content": {
                         "type": "string",
-                        "description": "Optional initial content. For large outputs, leave empty or provide only a brief header."
+                        "description": "Optional initial content. Leave empty or provide only a brief header."
                     }
                 },
                 "required": ["filename"]
