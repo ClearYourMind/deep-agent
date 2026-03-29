@@ -58,7 +58,8 @@ class Agent:
         print("Initializing agent", name, "...")
         self.name = name
         self._client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY_'+self.name), base_url=base_url)
-        self._system_prompt = {"role": "system", "content": system_prompt}
+        self._system_prompt = {"role": "system", "name": "Creator", "content": system_prompt}
+        self._extended_system_prompt = None
         self._messages = ContextPool()
         self.last_response: ChatCompletion = None
         self.wait_prompt = True
@@ -74,7 +75,7 @@ class Agent:
         print(self.name + " Thinking...")
         response = self._client.chat.completions.create(
             model="deepseek-chat",
-            messages=[self._system_prompt] + self._messages.get_messages(),
+            messages = [self._system_prompt] + ([self._extended_system_prompt] if self._extended_system_prompt else []) + self._messages.get_messages(),
             tools=tools.tool_list if self.use_tools else [],
             stream=False,
             max_tokens=1000
@@ -101,6 +102,9 @@ class Agent:
     def clear_message_history(self):
         self._messages.assign_messages([])
 
+    def set_extended_system_prompt(self, prompt):
+        self._extended_system_prompt = {'role': "system", "name": "MASTERMIND", "content": prompt}
+
     def _use_tool(self, tool) -> str:
         func = tool.function
         is_argument_parsing_success = True
@@ -109,7 +113,7 @@ class Agent:
             args = json.loads(tool.function.arguments)
         except json.decoder.JSONDecodeError as e:
             is_argument_parsing_success = False
-            print("\n\nEncountered an issue with parsing arguments")
+            print("\n\nEncountered JSONDecoreError during parsing arguments")
             with open('last_error.log', 'w') as f:
                 f.write(str(e)+'\n')
                 f.write(tool.function.arguments)
@@ -121,7 +125,7 @@ class Agent:
                 args["user_request"] = self.last_user_request
             result = tools.tool_functions[func.name](**args)
         else:
-            result = "Erroneous argument. Maybe it is too long. Please remember about token limitation."
+            result = "Encountered JSONDecoreError during parsing arguments. Erroneous argument. Maybe it is too long. Please remember about token limitation."
 
         return result
 
@@ -141,11 +145,9 @@ class Agent:
                 self.model_request()
             else: 
                 #       task complete. End of tool-calling loop
-                self._messages.update_important_messages(clear_history=True)
-                print("\n\n")
-                print(self.name, " Message history:\n")
-                print(self.get_messages())
-                print("\n\n")
+                # self._messages.update_important_messages(clear_history=True)
+                with open('message_history.md', 'w') as f:
+                    f.write(self.get_messages())
 
         return self.last_response.choices[0].message.content
 

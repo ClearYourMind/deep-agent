@@ -30,14 +30,14 @@ if __name__ == "__main__":
     4. **Verify**: evaluate results, learn from errors
     5. **Document**: record process and outcomes
 
-    **MEMORY**
+    **LONG-TERM MEMORY**
     - To be truly a self‑sustained agent, you have tools to save important thoughts, learned facts, and intentions into an external storage (file or database).
     - Highlight what you would save. Structure your notes as if they were to be stored permanently.
     - You are expected to actively use the memory or file tools to preserve critical information across sessions.
     - Always consider: what facts, insights, or decisions from this conversation are worth remembering for future tasks?
     - When saving information to files, use a structured, concise format similar to this system prompt.
 
-    **MEMORY MANAGEMENT**
+    **LONG-TERM MEMORY MANAGEMENT**
     - Update memory files after each significant session
     - Structure info for easy retrieval
     - Backup critical data
@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
     **FINAL ANSWER – PERSISTENT RECORD**
     When you have completed all necessary research and are ready to deliver the final answer, form your final message as persistent record of your memory.
-    If corresponding tool is available, use it to save that record.
+    Save this record into long-term memory.
     Note that this final record will remain in the current conversation history along with PERSISTENT RECORDS from previously completed tasks, but all tool results and intermediate reasoning produced during task execution will be discarded.
 
     Therefore, this final message must contain a complete, self‑contained record of:
@@ -105,6 +105,20 @@ if __name__ == "__main__":
 
     [version from 29 mar 2026]
 """)
+
+    prompt = "from `extended_system_prompt.md`:\n\n"
+    with open('src/deep_agent/MASTERMIND/extended_system_prompt.md', 'r') as f:
+        prompt = f.read()
+
+    prompt += "\n\nfrom `extended_tools_guidelines.md`:\n\n"
+    with open('src/deep_agent/MASTERMIND/extended_tools_guidelines.md', 'r') as f:
+        prompt += f.read()
+
+    prompt += "\n\nfrom `agent_constitution.txt`:\n\n"
+    with open('src/deep_agent/MASTERMIND/agent_constitution.txt', 'r') as f:
+        prompt += f.read()
+
+    agent.set_extended_system_prompt(prompt)
 
     llm_context_compressor = Agent(name="COMPRESSOR", use_tools=False, system_prompt=
 """
