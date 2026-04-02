@@ -44,7 +44,6 @@ class ContextPool:
 
     def compress_context(self, helper_agent):
         print('\n\n ..Context compression started..')
-        self.overflow = False
         if helper_agent:
             print('\n\n ..Context compression started..')
             helper_message = """
@@ -56,6 +55,7 @@ class ContextPool:
             result = helper_agent.send_message(helper_message, output=True)
             print("\nCompressed context:\n", result)
             self.assign_messages([{"role": "system", "name": "COMPRESSOR", "content": result}])
+            self.overflow = False
 
 class Agent:
     def __init__(self, name, base_url="https://api.deepseek.com/beta", system_prompt="", use_tools=True):

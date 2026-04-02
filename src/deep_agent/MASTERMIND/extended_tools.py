@@ -77,62 +77,6 @@ def load_entire_file(**kwargs):
     return result
 
 
-def read_file(**kwargs):
-    filename = kwargs["filename"]
-    section_name = kwargs.get("section", None)
-    print('arguments:', filename, "section:", str(section_name))
-    markdown = MarkdownAnalyzer(workdir + filename)
-    headers = markdown.identify_headers()
-    sections = {}
-    lines = []
-    with open(workdir + filename, 'r') as f:
-        lines = f.readlines()
-    line_count = len(lines)
-
-    #fill in sections
-    current_section = None
-    try:
-        for header in headers["Header"]:
-            if current_section:
-                current_section["end"] = header["line"] - 1
-                sections[current_section["text"]] = current_section
-
-            current_section = {
-                "text": header["text"],
-                "level": header["level"],
-                "start": header["line"],
-                "end": None
-            }
-        if current_section:
-            current_section["end"] = line_count - 1
-            sections[current_section["text"]] = current_section
-    except KeyError as e:
-        result = "File doesn't contain markdown. Use `load_entire_file` instead"
-        print("\nFile tool result:", result, "\n\n")
-        return result
-
-    if section_name:
-        result = "No such section: " + section_name
-        section = sections.get(section_name, None)
-        if section:
-            result = ''
-            for i in range(section["start"], section["end"]):
-                result += lines[i]
-    else:
-        toc = ''
-        # return table of contents
-        for header in headers["Header"]:
-            if header["level"] < 3:
-                toc +=f"{" "*header["level"]} - {header["text"]} ({header["line"]}) \n"
-        if toc:
-            result = toc
-        else:
-            result = "File doesn't contain markdown. Use `load_entire_file` instead"
-
-    print("\nFile tool result:", result, "\n\n")
-    return result
-
-
 def get_filelist(**kwargs):
     try:
         files = os.listdir(workdir)
@@ -162,12 +106,85 @@ def delete_file(**kwargs):
     return result
 
 
+# Chunked file IO
+def print_toc(toc):
+    for item in toc:
+        indent = '   ' * header["level"] + '-'
+        print(indent, item['name'], item['text'])
+
+
+def make_toc(headers, total_lines):
+    toc = []
+    last_toc_header_by_level = [None, None, None, None, None]
+    prev_header = None
+
+    for header in headers:
+        if prev_header:
+            if header["level"] <= prev_header["level"]:
+                for toc_header in last_toc_header_by_level[header["level"] - 1: prev_header["level"]]:
+                    if toc_header:
+                        toc_header["end"] = header["line"] - 1
+
+        toc.append({
+            "name": None,
+            "text": header["text"],
+            "level": header["level"],
+            "start": header["line"] - 1,
+            "end": None
+        })
+        prev_header = header
+        last_toc_header_by_level[header["level"] - 1] = toc[-1]
+
+    for toc_header in last_toc_header_by_level:
+        if toc_header:
+            if not toc_header["end"]:
+                toc_header["end"] = total_lines
+
+    # fill numerous header names
+    for header in toc:
+        header["name"] = f"[{header['start']} .. {header['end']}]"
+
+    return toc
+
+
+def read_file_section(**kwargs):
+    filename = kwargs["filename"]
+    section_name = kwargs.get("section", None)
+    print('arguments:', filename, "section:", str(section_name))
+    markdown = MarkdownAnalyzer(workdir + filename)
+    headers = markdown.identify_headers()["Header"]
+    lines = []
+    with open(workdir + filename, 'r') as f:
+        lines = f.readlines()
+
+    line_count = len(lines)
+
+    #fill in sections
+    toc = make_toc(headers, line_count)
+
+    if not section_name:
+        result = json.dumps(toc, indent=4, ensure_ascii=False)
+    else:
+        # find header by name
+        result = ''
+        for header in toc:
+            if header["name"] == section_name:
+                # return section contents
+                for n in range(header["start"], header["end"]):
+                    result += lines[n]
+                break
+        if result == '':
+            result = "Section " + section_name + " is not found. Use [<start_line> .. <end_line>] format. e.g. [1 .. 10]"
+    print("\nFile tool result:", result, "\n\n")
+    return result
+
+
 extended_tool_list = [
     {
         "type": "function",
         "function": {
             "name": "create_file",
-            "description": "Creates a new file in the MASTERMIND directory. Use this to initialize a file. Use append_file to add content in smaller portions to avoid exceeding token limits.",
+            "description": "Creates a new file. Use this to initialize a file. Use append_file to add content in smaller portions to avoid exceeding token limits.",
 
             "parameters": {
                 "type": "object",
@@ -178,7 +195,7 @@ extended_tool_list = [
                     },
                     "initial_content": {
                         "type": "string",
-                        "description": "Optional initial content. Leave empty or provide only a brief header."
+                        "description": "Optional initial content. Leave empty or provide base header structure."
                     }
                 },
                 "required": ["filename"]
@@ -234,8 +251,8 @@ extended_tool_list = [
     {
         "type": "function",
         "function": {
-            "name": "read_file",
-            "description": "Reads file's TOC or portion of the file contents in specified section.",
+            "name": "read_file_section",
+            "description": "Reads file's TOC. Specify section name to read portion of the file contents in specified section.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -304,7 +321,7 @@ extended_tool_functions = {
     "create_file": create_file,
     "append_file": append_file,
     "edit_file_content": edit_file_content,
-    "read_file": read_file,
+    "read_file_section": read_file_section,
     "load_entire_file": load_entire_file,
     "get_filelist": get_filelist,
     "delete_file": delete_file
