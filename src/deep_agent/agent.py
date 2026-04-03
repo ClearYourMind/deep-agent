@@ -32,8 +32,11 @@ class ContextPool:
         result = self._messages[:]
         return result
 
-    def get_chat_history(self, messages):
+    def get_chat_history(self, messages=None):
         message_list = ''
+        if not messages:
+            messages = self._messages
+
         for message in messages:
             message_list += " >> " + message["role"] + ": " + message["content"] + "\n\n"
         return message_list
@@ -59,7 +62,6 @@ class ContextPool:
             f.write(result + "\n\n")
 
     def compress_context(self, helper_agent):
-        print('\n\n ..Context compression started..')
         if helper_agent:
             if len(self._compressed_history) > 20:
                 self.extensive_compression(helper_agent)
@@ -73,7 +75,7 @@ class ContextPool:
             helper_message += self.get_chat_history(self._messages)
             result = helper_agent.send_message(helper_message, output=True)
             print("\nCompressed context:\n", result)
-            self._compressed_history.append([{"role": "system", "name": "COMPRESSOR", "content": result}])
+            self._compressed_history.append({"role": "system", "name": "COMPRESSOR", "content": result})
 
             with open('compressed_history.txt', 'a') as f:
                 f.write("# **Regular compression**:\n")
@@ -89,7 +91,7 @@ class Agent:
         self._client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY_'+self.name), base_url=base_url)
         self._system_prompt = {"role": "system", "name": "Creator", "content": system_prompt}
         self._extended_system_prompt = None
-        self._messages = ContextPool()
+        self.messages = ContextPool()
         self.last_response: ChatCompletion = None
         self.wait_prompt = True
         self._helper_agent = None
@@ -100,20 +102,20 @@ class Agent:
         self._helper_agent = helper_agent
 
     def model_request(self):
-        print(self.name + " Messages count:", self._messages.get_messages_count(), " Context length:", self._messages.get_context_length())
+        print(self.name + " Messages count:", self.messages.get_messages_count(), " Context length:", self.messages.get_context_length())
         print(self.name + " Thinking...")
         response = self._client.chat.completions.create(
             model="deepseek-chat",
-            messages = [self._system_prompt] + ([self._extended_system_prompt] if self._extended_system_prompt else []) + self._messages.get_messages(),
+            messages = [self._system_prompt] + (self._extended_system_prompt if self._extended_system_prompt else []) + self.messages.get_messages(),
             tools=tools.tool_list if self.use_tools else [],
             stream=False,
             max_tokens=2000
         )
-        self._messages.append(response.choices[0].message.model_dump())
+        self.messages.append(response.choices[0].message.model_dump())
         self.last_response = response
 
     def send_message(self, message: str, output=False) -> str:
-        self._messages.append({"role": "user", "content": message})
+        self.messages.append({"role": "user", "content": message})
         self.last_user_request = message
         self.model_request()
         calls = self.last_response.choices[0].message.tool_calls
@@ -123,10 +125,10 @@ class Agent:
         return self.last_response.choices[0].message.content if output else None
 
     def clear_message_history(self):
-        self._messages.assign_messages([])
+        self.messages.assign_messages([])
 
-    def set_extended_system_prompt(self, prompt):
-        self._extended_system_prompt = {'role': "system", "name": "MASTERMIND", "content": prompt}
+    def set_extended_system_prompt(self, prompt_messages):
+        self._extended_system_prompt = prompt_messages
 
     def _use_tool(self, tool) -> str:
         func = tool.function
@@ -159,7 +161,7 @@ class Agent:
             if calls:
                 self.wait_prompt = False
                 result = self._use_tool(calls[0])
-                self._messages.append({
+                self.messages.append({
                     "tool_call_id": calls[0].id,
                     "role": "tool",
                     "name": calls[0].function.name,
@@ -169,9 +171,10 @@ class Agent:
             else: 
                 #       task complete. End of tool-calling loop
                 with open('message_history.md', 'a') as f:
-                    f.write(self._messages.get_chat_history())
-                if self._messages.overflow:
-                    self._messages.compress_context(self._helper_agent)
+                    f.write(self.messages.get_chat_history())
+                    f.write("\n----------\n\n")
+                if self.messages.overflow:
+                    self.messages.compress_context(self._helper_agent)
 
         return self.last_response.choices[0].message.content
 

@@ -36,7 +36,7 @@ def append_file(**kwargs):
     
     try:
         with open(workdir + filename, 'a') as f:
-            f.write(content_portion)
+            f.write(content_portion+'\n')
         result = f"Content appended to '{filename}' successfully"
     except Exception as e:
         result = f"Error appending to file: {str(e)}"
@@ -123,6 +123,19 @@ def __print_toc(toc):
         print(indent, item['name'], item['text'])
 
 
+### def __get_headers_and_lines(markdown_file):
+def __get_headers_and_lines(markdown_file):
+    result = {}
+    markdown = MarkdownAnalyzer(markdown_file)
+    result["headers"] = markdown.identify_headers()["Header"]
+    with open(markdown_file, 'r') as f:
+        result["lines"] = f.readlines()
+    if "lines" in result:
+        result["line_count"] = len(result["lines"])
+
+    return result
+
+
 ### def _make_toc(headers, total_lines):
 def __make_toc(headers, total_lines):
     toc = []
@@ -151,9 +164,21 @@ def __make_toc(headers, total_lines):
             if not toc_header["end"]:
                 toc_header["end"] = total_lines
 
-    # fill numeric header names
+    # fill header names
+    used_names = []
     for header in toc:
-        header["name"] = f"[{header['start']} .. {header['end']}]"
+        suffix_id = 0
+        suffix = ''
+        while True:
+            name = header["text"] + suffix
+            if name not in used_names:
+                header["name"] = name
+                used_names.append(name)
+                break
+            else:
+                suffix_id += 1
+                suffix = f" ({'abcdefghijklmnopqrstuvwxyz'[suffix_id-1]})"
+
 
     return toc
 
@@ -164,12 +189,14 @@ def read_file_section(**kwargs):
     section_name = kwargs.get("section", None)
     print('arguments:', filename, "section:", str(section_name))
 
-    lines = []
-    with open(workdir + filename, 'r') as f:
-        lines = f.readlines()
-    line_count = len(lines)
-    markdown = MarkdownAnalyzer(workdir + filename)
-    headers = markdown.identify_headers()["Header"]
+    try:
+        file_info = __get_headers_and_lines(workdir + filename)
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+    lines = file_info["lines"]
+    line_count = file_info["line_count"]
+    headers = file_info["headers"]
 
     #fill in sections
     try:
@@ -190,7 +217,7 @@ def read_file_section(**kwargs):
                     result += lines[n]
                 break
         if result == '':
-            result = "Section " + section_name + " is not found. Use exact `name` from TOC, e.g. [79 .. 99]"
+            result = "Section " + section_name + " is not found. Use exact `name` from TOC"
     print("\nFile tool result:", result, "\n\n")
     return result
 
@@ -201,12 +228,15 @@ def write_file_section(**kwargs):
     section_name = kwargs["section"]
     content = kwargs["content"]
     print('arguments:', filename, "section:", section_name)
-    lines = []
-    with open(workdir + filename, 'r') as f:
-        lines = f.readlines()
-    line_count = len(lines)
-    markdown = MarkdownAnalyzer(workdir + filename)
-    headers = markdown.identify_headers()["Header"]
+
+    try:
+        file_info = __get_headers_and_lines(workdir + filename)
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+    lines = file_info["lines"]
+    line_count = file_info["line_count"]
+    headers = file_info["headers"]
 
     #fill in sections
     try:
@@ -221,7 +251,7 @@ def write_file_section(**kwargs):
             break
 
     if not section_header:
-            return "Section " + section_name + " is not found. Use exact `name` from TOC, e.g. [79 .. 99]"
+            return "Section " + section_name + " is not found. Use exact `name` from TOC"
 
     prefix = lines[0: section_header["start"]]
     postfix = lines[section_header["end"]:]
@@ -229,7 +259,7 @@ def write_file_section(**kwargs):
     with open(workdir + filename, 'w') as f:
         f.writelines(lines)
 
-    return f"Content is written into section {section_name} of the file {filename} successfully"
+    return f"Content is written into section {section_name} of the file {filename} successfully. Current file TOC: \n {toc}"
 
 ## extended tool declarations
 extended_tool_list = [
@@ -360,7 +390,7 @@ extended_tool_list = [
                     },
                     "section": {
                         "type": "string",
-                        "description": "Section name to dive into. Specify `name` value of TOC, e.g. '[79 .. 99]'"
+                        "description": "Section name to dive into. Specify exact `name` value of TOC"
                     },
                 },
                 "required": ["filename"]
@@ -381,11 +411,11 @@ extended_tool_list = [
                     },
                     "section": {
                         "type": "string",
-                        "description": "Section to be rewritten. Specify `name` value of TOC, e.g. '[79 .. 99]'"
+                        "description": "Section to be rewritten. Specify exact `name` value of TOC"
                     },
                     "content": {
                         "type": "string",
-                        "description": "Content to write into section including header. Keep short to avoid token limitation issue (10-20 lines)"
+                        "description": "Content to write into section including header. Keep short to avoid token limitation issue (20-50 lines)"
                     },
                 },
                 "required": ["filename", "section", "content"]
@@ -405,3 +435,110 @@ extended_tool_functions = {
     "read_file_section": read_file_section,
     "write_file_section": write_file_section,
 }
+
+### def check_memory_consistency(**kwargs):
+def check_memory_consistency(**kwargs):
+    print('arguments: memory consistency check')
+    print('DEBUG: Running FIXED version of check_memory_consistency')
+    
+    report = {
+        "status": "INCOMPLETE",
+        "checks": [],
+        "issues": [],
+        "recommendations": []
+    }
+    
+    try:
+        # 1. Check file existence
+        files = os.listdir(workdir)
+        report["checks"].append("File existence check")
+        
+        # 2. Check memory_base.txt references
+        try:
+            with open(workdir + "memory_base.txt", 'r') as f:
+                memory_lines = f.readlines()
+                
+            # Check for listed files
+            listed_files = []
+            memory_text = ''.join(memory_lines)
+            print(f'DEBUG: memory_text length: {len(memory_text)}')
+            print(f'DEBUG: Looking for "ДОСТУПНЫЕ ФАЙЛЫ" in memory_text')
+            
+            if "ДОСТУПНЫЕ ФАЙЛЫ" in memory_text:
+                print('DEBUG: Found "ДОСТУПНЫЕ ФАЙЛЫ" section')
+                in_section = False
+                for line in memory_lines:
+                    if "ДОСТУПНЫЕ ФАЙЛЫ" in line:
+                        in_section = True
+                        continue
+                    if in_section and line.strip().startswith('- `') and '`' in line:
+                        filename = line.split('`')[1]
+                        listed_files.append(filename)
+                        print(f'DEBUG: Found file: {filename}')
+                    elif in_section and line.strip() == '':
+                        break
+                
+                report["checks"].append(f"Found {len(listed_files)} files listed in memory_base.txt")
+                print(f'DEBUG: Total listed files: {len(listed_files)}')
+                
+                # Verify each listed file exists
+                for filename in listed_files:
+                    if filename in files:
+                        report["checks"].append(f"✓ {filename} exists")
+                    else:
+                        report["issues"].append(f"✗ {filename} listed but not found")
+                        report["recommendations"].append(f"Remove {filename} from memory_base.txt or create it")
+                        
+        except Exception as e:
+            print(f'DEBUG: Exception in memory_base.txt reading: {str(e)}')
+            report["issues"].append(f"Error reading memory_base.txt: {str(e)}")
+        
+        # 3. Check core files exist
+        core_files = ["core_system_prompt.md", "extended_system_prompt.md", 
+                     "extended_tools_guidelines.md", "extended_tools.py",
+                     "agent_constitution.txt", "memory_base.txt"]
+        
+        for core_file in core_files:
+            if core_file in files:
+                report["checks"].append(f"✓ Core file {core_file} exists")
+            else:
+                report["issues"].append(f"✗ Missing core file: {core_file}")
+                report["recommendations"].append(f"Create {core_file}")
+        
+        # 4. Check for orphaned files (exist but not in memory_base.txt)
+        for file in files:
+            if file.startswith('.') or file == '__pycache__' or file == '__init__.py':
+                continue
+            if file not in listed_files and file not in core_files:
+                report["issues"].append(f"✗ Orphaned file: {file} exists but not in memory_base.txt")
+                report["recommendations"].append(f"Add {file} to memory_base.txt or delete it")
+        
+        # Update status
+        if len(report["issues"]) == 0:
+            report["status"] = "PASS"
+            report["checks"].append("All consistency checks passed")
+        else:
+            report["status"] = "FAIL"
+            report["checks"].append(f"Found {len(report['issues'])} issues")
+            
+    except Exception as e:
+        report["status"] = "ERROR"
+        report["issues"].append(f"System error: {str(e)}")
+    
+    result = json.dumps(report, indent=2, ensure_ascii=False)
+    print("\nMemory consistency check result:", result, "\n\n")
+    return result
+
+extended_tool_list.append({
+    "type": "function",
+    "function": {
+        "name": "check_memory_consistency",
+        "description": "Checks memory consistency by verifying file existence, cross-references, and system integrity. Returns structured report.",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+        },
+    }
+})
+
+extended_tool_functions["check_memory_consistency"] = check_memory_consistency
