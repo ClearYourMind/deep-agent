@@ -3,6 +3,9 @@
 ## **DEVELOPING NEW TOOL GUIDELINES**
 - **UX**: only for LLM internal use. Prefer non-human, LLM-friendly parameters and returning values.
 - **Code style**: short, efficient python algorythms without comments, explanations and type hints, like 'typing'.
+- **Using import**: Find, import and use appropriate python packages. Refer to its documentation or README.
+- **Simplicity**: Achieve minimum viable result. Avoid complexity.
+
 
 ## **AVAILABLE TOOLS**
 ### FILE MANAGEMENT TOOLS
@@ -13,6 +16,7 @@
 
 #### **Chunked file input/output (preferred)**:
 - `read_file_section`: Retrieves table of contents in JSON-format. Call again with 'section' parameter where the header name is specified in format [<start_line> .. <end_line>] to read corresponding file section (e.g. [1 .. 10]).
+- `write_file_section`: Allows modifying only specified section of a file, including header. Preserves file structure. Saves token usage.
 
 #### **Other file input/output**:
 - `append_file`: Add content in small portions. Call repeatedly to save tokens.

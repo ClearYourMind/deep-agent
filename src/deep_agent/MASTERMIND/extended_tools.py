@@ -10,7 +10,8 @@ from mrkdwn_analysis import MarkdownAnalyzer
 workdir = "src/deep_agent/MASTERMIND/"
 #workdir = "MASTERMIND/"
 
-## def create_file(**kwargs):
+## functions
+### def create_file(**kwargs):
 def create_file(**kwargs):
     filename = kwargs["filename"]
     initial_content = kwargs.get("initial_content", "")
@@ -27,7 +28,7 @@ def create_file(**kwargs):
     return result
 
 
-## def append_file(**kwargs):
+### def append_file(**kwargs):
 def append_file(**kwargs):
     filename = kwargs["filename"]
     content_portion = kwargs["content_portion"]
@@ -44,7 +45,7 @@ def append_file(**kwargs):
     return result
 
 
-## def edit_file_content(**kwargs):
+### def edit_file_content(**kwargs):
 def edit_file_content(**kwargs):
     filename = kwargs["filename"]
     line_number = kwargs["line_number"]
@@ -69,7 +70,7 @@ def edit_file_content(**kwargs):
     return result
 
 
-## def load_entire_file(**kwargs):
+### def load_entire_file(**kwargs):
 def load_entire_file(**kwargs):
     print('arguments:', kwargs["filename"])
 
@@ -83,7 +84,7 @@ def load_entire_file(**kwargs):
     return result
 
 
-## def get_filelist(**kwargs):
+### def get_filelist(**kwargs):
 def get_filelist(**kwargs):
     try:
         files = os.listdir(workdir)
@@ -95,7 +96,7 @@ def get_filelist(**kwargs):
     return result
 
 
-## def get_filelist(**kwargs):
+### def get_filelist(**kwargs):
 def delete_file(**kwargs):
     print('arguments:', kwargs["filename"])
 
@@ -114,16 +115,16 @@ def delete_file(**kwargs):
     return result
 
 
-# Chunked file IO
-## def _print_toc(toc):
-def _print_toc(toc):
+## Chunked file IO functions
+### def _print_toc(toc):
+def __print_toc(toc):
     for item in toc:
         indent = '   ' * header["level"] + '-'
         print(indent, item['name'], item['text'])
 
 
-## def _make_toc(headers, total_lines):
-def _make_toc(headers, total_lines):
+### def _make_toc(headers, total_lines):
+def __make_toc(headers, total_lines):
     toc = []
     last_toc_header_by_level = [None, None, None, None, None]
     prev_header = None
@@ -157,7 +158,7 @@ def _make_toc(headers, total_lines):
     return toc
 
 
-## def read_file_section(**kwargs):
+### def read_file_section(**kwargs):
 def read_file_section(**kwargs):
     filename = kwargs["filename"]
     section_name = kwargs.get("section", None)
@@ -172,7 +173,7 @@ def read_file_section(**kwargs):
 
     #fill in sections
     try:
-        toc = _make_toc(headers, line_count)
+        toc = __make_toc(headers, line_count)
     except KeyError as e:
         return "[" + filename + " has no markdown header structure. Reading full content]\n\n"+load_entire_file(filename=filename)
 
@@ -189,12 +190,48 @@ def read_file_section(**kwargs):
                     result += lines[n]
                 break
         if result == '':
-            result = "Section " + section_name + " is not found. Use [<start_line> .. <end_line>] format. e.g. [1 .. 10]"
+            result = "Section " + section_name + " is not found. Use exact `name` from TOC, e.g. [79 .. 99]"
     print("\nFile tool result:", result, "\n\n")
     return result
 
 
-# extended tool declarations
+### def write_file_section(**kwargs):
+def write_file_section(**kwargs):
+    filename = kwargs["filename"]
+    section_name = kwargs["section"]
+    content = kwargs["content"]
+    print('arguments:', filename, "section:", section_name)
+    lines = []
+    with open(workdir + filename, 'r') as f:
+        lines = f.readlines()
+    line_count = len(lines)
+    markdown = MarkdownAnalyzer(workdir + filename)
+    headers = markdown.identify_headers()["Header"]
+
+    #fill in sections
+    try:
+        toc = __make_toc(headers, line_count)
+    except KeyError as e:
+        return filename + " has no markdown header structure"
+
+    section_header = None
+    for header in toc:
+        if header["name"] == section_name:
+            section_header = header
+            break
+
+    if not section_header:
+            return "Section " + section_name + " is not found. Use exact `name` from TOC, e.g. [79 .. 99]"
+
+    prefix = lines[0: section_header["start"]]
+    postfix = lines[section_header["end"]:]
+    lines = prefix + [content + "\n"]  + postfix
+    with open(workdir + filename, 'w') as f:
+        f.writelines(lines)
+
+    return f"Content is written into section {section_name} of the file {filename} successfully"
+
+## extended tool declarations
 extended_tool_list = [
     {
         "type": "function",
@@ -267,27 +304,6 @@ extended_tool_list = [
     {
         "type": "function",
         "function": {
-            "name": "read_file_section",
-            "description": "Reads file's TOC. Specify section name to read portion of the file contents in specified section.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "filename": {
-                        "type": "string",
-                        "description": "Name of the file to read."
-                    },
-                    "section": {
-                        "type": "string",
-                        "description": "Section to dive into. Use plain text."
-                    },
-                },
-                "required": ["filename"]
-            },
-        }
-    },
-    {
-        "type": "function",
-        "function": {
             "name": "load_entire_file",
             "description": "Reads the entire content of a specified file. Use this to retrieve stored memory or information.",
             "parameters": {
@@ -330,6 +346,52 @@ extended_tool_list = [
             },
         }
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_file_section",
+            "description": "Reads file's TOC. Specify section name to read portion of the file contents in specified section.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Name of the file to read."
+                    },
+                    "section": {
+                        "type": "string",
+                        "description": "Section name to dive into. Specify `name` value of TOC, e.g. '[79 .. 99]'"
+                    },
+                },
+                "required": ["filename"]
+            },
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "write_file_section",
+            "description": "Replaces specified section of the file with output content, including section header. Call read_file_section first to get TOC to know section names",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Name of the file to change."
+                    },
+                    "section": {
+                        "type": "string",
+                        "description": "Section to be rewritten. Specify `name` value of TOC, e.g. '[79 .. 99]'"
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "Content to write into section including header. Keep short to avoid token limitation issue (10-20 lines)"
+                    },
+                },
+                "required": ["filename", "section", "content"]
+            },
+        }
+    },
 ]
 
 
@@ -337,8 +399,9 @@ extended_tool_functions = {
     "create_file": create_file,
     "append_file": append_file,
     "edit_file_content": edit_file_content,
-    "read_file_section": read_file_section,
     "load_entire_file": load_entire_file,
     "get_filelist": get_filelist,
-    "delete_file": delete_file
+    "delete_file": delete_file,
+    "read_file_section": read_file_section,
+    "write_file_section": write_file_section,
 }
