@@ -3,13 +3,12 @@ import json
 import os
 import tools
 
-# max_content_length_truncate = 1000
-
 
 class ContextPool:
     def __init__(self):
         self._messages = []
-        self._max_length = 10000
+        self._compressed_history = []
+        self._max_length = 20000
         self.overflow = False
 
     def get_context_length(self):
@@ -33,28 +32,54 @@ class ContextPool:
         result = self._messages[:]
         return result
 
-    def get_chat_history(self):
+    def get_chat_history(self, messages):
         message_list = ''
-        for message in self._messages:
+        for message in messages:
             message_list += " >> " + message["role"] + ": " + message["content"] + "\n\n"
         return message_list
 
     def assign_messages(self, messages):
         self._messages = messages[:]
 
+    def extensive_compression(self, helper_agent):
+            # compress compressed history
+        print('\n\n ..Extensive history compression..')
+        helper_message = """
+**ACTION**: COMPRESS
+
+**CONTENT**:
+"""
+        helper_message += self.get_chat_history(self._compressed_history)
+        result = helper_agent.send_message(helper_message, output=True)
+        print("\nExtensively compressed history:\n", result)
+        self._compressed_history = [{"role": "system", "name": "COMPRESSOR", "content": result}]
+
+        with open('compressed_history.txt', 'a') as f:
+            f.write("# **Extensive compression**:\n")
+            f.write(result + "\n\n")
+
     def compress_context(self, helper_agent):
         print('\n\n ..Context compression started..')
         if helper_agent:
+            if len(self._compressed_history) > 20:
+                self.extensive_compression(helper_agent)
+
             print('\n\n ..Context compression started..')
             helper_message = """
 **ACTION**: COMPRESS
 
 **CONTENT**:
 """
-            helper_message += self.get_chat_history()
+            helper_message += self.get_chat_history(self._messages)
             result = helper_agent.send_message(helper_message, output=True)
             print("\nCompressed context:\n", result)
-            self.assign_messages([{"role": "system", "name": "COMPRESSOR", "content": result}])
+            self._compressed_history.append([{"role": "system", "name": "COMPRESSOR", "content": result}])
+
+            with open('compressed_history.txt', 'a') as f:
+                f.write("# **Regular compression**:\n")
+                f.write(result + "\n\n")
+
+            self.assign_messages(self._compressed_history)
             self.overflow = False
 
 class Agent:
@@ -82,7 +107,7 @@ class Agent:
             messages = [self._system_prompt] + ([self._extended_system_prompt] if self._extended_system_prompt else []) + self._messages.get_messages(),
             tools=tools.tool_list if self.use_tools else [],
             stream=False,
-            max_tokens=1000
+            max_tokens=2000
         )
         self._messages.append(response.choices[0].message.model_dump())
         self.last_response = response
@@ -111,7 +136,7 @@ class Agent:
             args = json.loads(tool.function.arguments)
         except json.decoder.JSONDecodeError as e:
             is_argument_parsing_success = False
-            print("\n\nEncountered JSONDecoreError during parsing arguments")
+            print("\n\nEncountered JSONDecodeError during parsing arguments")
             with open('last_error.log', 'w') as f:
                 f.write(str(e)+'\n')
                 f.write(tool.function.arguments)
