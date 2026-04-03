@@ -143,7 +143,7 @@ class Agent:
                 self.model_request()
             else: 
                 #       task complete. End of tool-calling loop
-                with open('message_history.md', 'w') as f:
+                with open('message_history.md', 'a') as f:
                     f.write(self._messages.get_chat_history())
                 if self._messages.overflow:
                     self._messages.compress_context(self._helper_agent)

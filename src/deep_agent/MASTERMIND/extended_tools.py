@@ -1,12 +1,16 @@
+# EXTENDED TOOLS IMPLEMENTATION
+
+## imports
 import requests
 import json
 import os
 from mrkdwn_analysis import MarkdownAnalyzer
 
+## constants
 workdir = "src/deep_agent/MASTERMIND/"
 #workdir = "MASTERMIND/"
 
-
+## def create_file(**kwargs):
 def create_file(**kwargs):
     filename = kwargs["filename"]
     initial_content = kwargs.get("initial_content", "")
@@ -23,6 +27,7 @@ def create_file(**kwargs):
     return result
 
 
+## def append_file(**kwargs):
 def append_file(**kwargs):
     filename = kwargs["filename"]
     content_portion = kwargs["content_portion"]
@@ -39,6 +44,7 @@ def append_file(**kwargs):
     return result
 
 
+## def edit_file_content(**kwargs):
 def edit_file_content(**kwargs):
     filename = kwargs["filename"]
     line_number = kwargs["line_number"]
@@ -63,8 +69,8 @@ def edit_file_content(**kwargs):
     return result
 
 
+## def load_entire_file(**kwargs):
 def load_entire_file(**kwargs):
-    result = "<failed to open file>"
     print('arguments:', kwargs["filename"])
 
     try:
@@ -77,6 +83,7 @@ def load_entire_file(**kwargs):
     return result
 
 
+## def get_filelist(**kwargs):
 def get_filelist(**kwargs):
     try:
         files = os.listdir(workdir)
@@ -88,6 +95,7 @@ def get_filelist(**kwargs):
     return result
 
 
+## def get_filelist(**kwargs):
 def delete_file(**kwargs):
     print('arguments:', kwargs["filename"])
 
@@ -107,13 +115,15 @@ def delete_file(**kwargs):
 
 
 # Chunked file IO
-def print_toc(toc):
+## def _print_toc(toc):
+def _print_toc(toc):
     for item in toc:
         indent = '   ' * header["level"] + '-'
         print(indent, item['name'], item['text'])
 
 
-def make_toc(headers, total_lines):
+## def _make_toc(headers, total_lines):
+def _make_toc(headers, total_lines):
     toc = []
     last_toc_header_by_level = [None, None, None, None, None]
     prev_header = None
@@ -140,32 +150,37 @@ def make_toc(headers, total_lines):
             if not toc_header["end"]:
                 toc_header["end"] = total_lines
 
-    # fill numerous header names
+    # fill numeric header names
     for header in toc:
         header["name"] = f"[{header['start']} .. {header['end']}]"
 
     return toc
 
 
+## def read_file_section(**kwargs):
 def read_file_section(**kwargs):
     filename = kwargs["filename"]
     section_name = kwargs.get("section", None)
     print('arguments:', filename, "section:", str(section_name))
-    markdown = MarkdownAnalyzer(workdir + filename)
-    headers = markdown.identify_headers()["Header"]
+
     lines = []
     with open(workdir + filename, 'r') as f:
         lines = f.readlines()
-
     line_count = len(lines)
+    markdown = MarkdownAnalyzer(workdir + filename)
+    headers = markdown.identify_headers()["Header"]
 
     #fill in sections
-    toc = make_toc(headers, line_count)
+    try:
+        toc = _make_toc(headers, line_count)
+    except KeyError as e:
+        return "[" + filename + " has no markdown header structure. Reading full content]\n\n"+load_entire_file(filename=filename)
 
     if not section_name:
+        # return toc
         result = json.dumps(toc, indent=4, ensure_ascii=False)
     else:
-        # find header by name
+        # return section content
         result = ''
         for header in toc:
             if header["name"] == section_name:
@@ -179,6 +194,7 @@ def read_file_section(**kwargs):
     return result
 
 
+# extended tool declarations
 extended_tool_list = [
     {
         "type": "function",
