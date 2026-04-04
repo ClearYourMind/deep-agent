@@ -3,7 +3,6 @@ import json
 import os
 import tools
 
-
 class ContextPool:
     def __init__(self):
         self._messages = []
@@ -20,8 +19,12 @@ class ContextPool:
     def get_messages_count(self):
         return len(self._messages)
 
-    def append(self, message):
+    def append(self, message, save_history):
         self._messages.append(message)
+        if save_history:
+            with open('message_history.md', 'a') as f:
+                f.write(f">> {message['role']}:\n{message['content']}\n\n")
+
         if self.get_context_length() > self._max_length:
             print("\t !!! Context max length overflow. It should be compressed !!!")
             self.overflow = True
@@ -85,7 +88,7 @@ class ContextPool:
             self.overflow = False
 
 class Agent:
-    def __init__(self, name, base_url="https://api.deepseek.com/beta", system_prompt="", use_tools=True):
+    def __init__(self, name, base_url="https://api.deepseek.com/beta", system_prompt="", use_tools=True, save_history=True):
         print("Initializing agent", name, "...")
         self.name = name
         self._client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY_'+self.name), base_url=base_url)
@@ -96,6 +99,7 @@ class Agent:
         self.wait_prompt = True
         self._helper_agent = None
         self.use_tools = use_tools
+        self._save_history = save_history
         self.last_user_request = ""
 
     def add_helper_agent(self, helper_agent):
@@ -111,18 +115,16 @@ class Agent:
             stream=False,
             max_tokens=2000
         )
-        self.messages.append(response.choices[0].message.model_dump())
+        self.messages.append(response.choices[0].message.model_dump(), self._save_history)
         self.last_response = response
 
     def send_message(self, message: str, output=False) -> str:
-        self.messages.append({"role": "user", "content": message})
+        self.messages.append({"role": "user", "content": message}, self._save_history)
         self.last_user_request = message
         self.model_request()
         calls = self.last_response.choices[0].message.tool_calls
         if calls:
             self.wait_prompt = False
-        else:
-            self.messages.append({"role": "assistant", "content": message})
 
         return self.last_response.choices[0].message.content if output else None
 
@@ -168,17 +170,19 @@ class Agent:
                     "role": "tool",
                     "name": calls[0].function.name,
                     "content": result
-                })
+                }, self._save_history)
                 self.model_request()
             else: 
-                self.messages.append({"role": "assistant", "content": self.last_response.choices[0].message.content})
-
                 #       task complete. End of tool-calling loop
-                with open('message_history.md', 'a') as f:
-                    f.write(self.messages.get_chat_history())
-                    f.write("\n----------\n\n")
+                if self._save_history:
+                    with open('message_history.md', 'a') as f:
+                        f.write("\n----------\n\n")
+                    with open('completed_tasks_history.md', 'a') as f:
+                        f.write(self.last_response.choices[0].message.content + "\n\n")
+
                 if self.messages.overflow:
                     self.messages.compress_context(self._helper_agent)
+                    self.messages.append({"role": "assistant", "content": self.last_response.choices[0].message.content}, self._save_history)
 
         return self.last_response.choices[0].message.content
 

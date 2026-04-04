@@ -1,14 +1,15 @@
-# EXTENDED TOOLS IMPLEMENTATION
-
+# EXTENDED TOOLS
+## WARNING - BIG FILE!
 ## imports
 import requests
 import json
 import os
 from mrkdwn_analysis import MarkdownAnalyzer
 
-## constants
+## module variables
 workdir = "src/deep_agent/MASTERMIND/"
-#workdir = "MASTERMIND/"
+extended_tool_list = []
+extended_tool_functions = {}
 
 ## functions
 ### def create_file(**kwargs):
@@ -27,6 +28,31 @@ def create_file(**kwargs):
     print("\n\nFile tool result:", result, "\n")
     return result
 
+extended_tool_functions["create_file"] = create_file
+extended_tool_list.append(    {
+        "type": "function",
+        "function": {
+            "name": "create_file",
+            "description": "Creates a new file. Use this to initialize a file. Use append_file to add content in smaller portions to avoid exceeding token limits.",
+
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Name of the file to create (e.g., 'notes.txt')."
+                    },
+                    "initial_content": {
+                        "type": "string",
+                        "description": "Optional initial content. Leave empty or provide base header structure."
+                    }
+                },
+                "required": ["filename"]
+            },
+        }
+    }
+)
+
 
 ### def append_file(**kwargs):
 def append_file(**kwargs):
@@ -44,9 +70,32 @@ def append_file(**kwargs):
     print("\nFile tool result:", result, "\n\n")
     return result
 
+extended_tool_functions["append_file"] = append_file
+extended_tool_list.append(    {
+        "type": "function",
+        "function": {
+            "name": "append_file",
+            "description": "Appends a portion of content to the end of an existing file. Use this to build large content incrementally. Split the content into multiple small portions (e.g., a few paragraphs or sections at a time) and call append_file repeatedly. This prevents the response from being truncated due to token limits.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Name of the file to append to."
+                    },
+                    "content_portion": {
+                        "type": "string",
+                        "description": "The text to append. Keep each portion relatively short (e.g., a few sentences or a small section)."
+                    }
+                },
+                "required": ["filename", "content_portion"]
+            },
+        }
+    }
+)
 
-### def edit_file_content(**kwargs):
-def edit_file_content(**kwargs):
+### def edit_file_line(**kwargs):
+def edit_file_line(**kwargs):
     filename = kwargs["filename"]
     line_number = kwargs["line_number"]
     line_content = kwargs["line_content"]
@@ -69,6 +118,34 @@ def edit_file_content(**kwargs):
     print("\nFile tool result:", result, "\n\n")
     return result
 
+extended_tool_functions["edit_file_line"] = edit_file_line
+extended_tool_list.append(    {
+        "type": "function",
+        "function": {
+            "name": "edit_file_line",
+            "description": "Replaces a specific line in a file with new content. Line numbers start from 0. Use this to correct or update specific lines.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Name of the file to edit."
+                    },
+                    "line_number": {
+                        "type": "integer",
+                        "description": "The line number to replace (0‑based index)."
+                    },
+                    "line_content": {
+                        "type": "string",
+                        "description": "The new content for that line."
+                    }
+                },
+                "required": ["filename", "line_number", "line_content"]
+            },
+        }
+    }
+)
+
 
 ### def load_entire_file(**kwargs):
 def load_entire_file(**kwargs):
@@ -83,6 +160,26 @@ def load_entire_file(**kwargs):
     print("\nFile tool result:", result, "\n\n")
     return result
 
+extended_tool_functions["load_entire_file"] = load_entire_file
+extended_tool_list.append(    {
+        "type": "function",
+        "function": {
+            "name": "load_entire_file",
+            "description": "Reads the entire content of a specified file. Use this to retrieve stored memory or information.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Name of the file to load into context."
+                    },
+                },
+                "required": ["filename"]
+            },
+        }
+    },
+)
+
 
 ### def get_filelist(**kwargs):
 def get_filelist(**kwargs):
@@ -95,8 +192,22 @@ def get_filelist(**kwargs):
     print("\n\nFile tool result:", result, "\n")
     return result
 
+extended_tool_functions["get_filelist"] = get_filelist
+extended_tool_list.append(    {
+        "type": "function",
+        "function": {
+            "name": "get_filelist",
+            "description": "Returns a list of filenames currently stored in the MASTERMIND directory. Use this to see what files are available.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+            },
+        }
+    },
+)
 
-### def get_filelist(**kwargs):
+
+### def delete_file(**kwargs):
 def delete_file(**kwargs):
     print('arguments:', kwargs["filename"])
 
@@ -114,15 +225,28 @@ def delete_file(**kwargs):
     print("File tool result:", result, "\n\n")
     return result
 
+extended_tool_functions["delete_file"] = delete_file
+extended_tool_list.append(    {
+        "type": "function",
+        "function": {
+            "name": "delete_file",
+            "description": "Deletes specified file",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Name of the file to delete."
+                    },
+                },
+                "required": ["filename"]
+            },
+        }
+    },
+)
+
 
 ## Chunked file IO functions
-### def _print_toc(toc):
-def __print_toc(toc):
-    for item in toc:
-        indent = '   ' * header["level"] + '-'
-        print(indent, item['name'], item['text'])
-
-
 ### def __get_headers_and_lines(markdown_file):
 def __get_headers_and_lines(markdown_file):
     result = {}
@@ -221,6 +345,30 @@ def read_file_section(**kwargs):
     print("\nFile tool result:", result, "\n\n")
     return result
 
+extended_tool_functions["read_file_section"] = read_file_section
+extended_tool_list.append(    {
+        "type": "function",
+        "function": {
+            "name": "read_file_section",
+            "description": "Reads file's TOC. Specify section name to read portion of the file contents in specified section.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "description": "Name of the file to read."
+                    },
+                    "section": {
+                        "type": "string",
+                        "description": "Section name to dive into. Specify exact `name` value of TOC"
+                    },
+                },
+                "required": ["filename"]
+            },
+        }
+    },
+)
+
 
 ### def write_file_section(**kwargs):
 def write_file_section(**kwargs):
@@ -261,143 +409,8 @@ def write_file_section(**kwargs):
 
     return f"Content is written into section {section_name} of the file {filename} successfully. Current file TOC: \n {toc}"
 
-## extended tool declarations
-extended_tool_list = [
-    {
-        "type": "function",
-        "function": {
-            "name": "create_file",
-            "description": "Creates a new file. Use this to initialize a file. Use append_file to add content in smaller portions to avoid exceeding token limits.",
-
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "filename": {
-                        "type": "string",
-                        "description": "Name of the file to create (e.g., 'notes.txt')."
-                    },
-                    "initial_content": {
-                        "type": "string",
-                        "description": "Optional initial content. Leave empty or provide base header structure."
-                    }
-                },
-                "required": ["filename"]
-            },
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "append_file",
-            "description": "Appends a portion of content to the end of an existing file. Use this to build large content incrementally. Split the content into multiple small portions (e.g., a few paragraphs or sections at a time) and call append_file repeatedly. This prevents the response from being truncated due to token limits.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "filename": {
-                        "type": "string",
-                        "description": "Name of the file to append to."
-                    },
-                    "content_portion": {
-                        "type": "string",
-                        "description": "The text to append. Keep each portion relatively short (e.g., a few sentences or a small section)."
-                    }
-                },
-                "required": ["filename", "content_portion"]
-            },
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "edit_file_content",
-            "description": "Replaces a specific line in a file with new content. Line numbers start from 0. Use this to correct or update specific lines.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "filename": {
-                        "type": "string",
-                        "description": "Name of the file to edit."
-                    },
-                    "line_number": {
-                        "type": "integer",
-                        "description": "The line number to replace (0‑based index)."
-                    },
-                    "line_content": {
-                        "type": "string",
-                        "description": "The new content for that line."
-                    }
-                },
-                "required": ["filename", "line_number", "line_content"]
-            },
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "load_entire_file",
-            "description": "Reads the entire content of a specified file. Use this to retrieve stored memory or information.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "filename": {
-                        "type": "string",
-                        "description": "Name of the file to load into context."
-                    },
-                },
-                "required": ["filename"]
-            },
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_filelist",
-            "description": "Returns a list of filenames currently stored in the MASTERMIND directory. Use this to see what files are available.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-            },
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "delete_file",
-            "description": "Deletes specified file",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "filename": {
-                        "type": "string",
-                        "description": "Name of the file to delete."
-                    },
-                },
-                "required": ["filename"]
-            },
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "read_file_section",
-            "description": "Reads file's TOC. Specify section name to read portion of the file contents in specified section.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "filename": {
-                        "type": "string",
-                        "description": "Name of the file to read."
-                    },
-                    "section": {
-                        "type": "string",
-                        "description": "Section name to dive into. Specify exact `name` value of TOC"
-                    },
-                },
-                "required": ["filename"]
-            },
-        }
-    },
-    {
+extended_tool_functions["write_file_section"] = write_file_section
+extended_tool_list.append(    {
         "type": "function",
         "function": {
             "name": "write_file_section",
@@ -422,19 +435,77 @@ extended_tool_list = [
             },
         }
     },
-]
+)
 
 
-extended_tool_functions = {
-    "create_file": create_file,
-    "append_file": append_file,
-    "edit_file_content": edit_file_content,
-    "load_entire_file": load_entire_file,
-    "get_filelist": get_filelist,
-    "delete_file": delete_file,
-    "read_file_section": read_file_section,
-    "write_file_section": write_file_section,
-}
+### def estimate_tokens(**kwargs):
+def estimate_tokens(**kwargs):
+    text = kwargs["text"]
+    print('arguments: estimate_tokens for text length:', len(text))
+    
+    # DeepSeek token approximation rules:
+    # 1 English character ≈ 0.3 tokens
+    # 1 Russian character ≈ 0.6 tokens
+    # 1 space ≈ 0.1 tokens
+    # Punctuation varies
+    
+    # Simple approximation
+    english_chars = sum(1 for c in text if c.isascii() and c.isalpha())
+    russian_chars = sum(1 for c in text if '\u0400' <= c <= '\u04FF')
+    spaces = text.count(' ')
+    punctuation = len([c for c in text if c in ',.!?;:()[]{}"\'-+=*/\\%'])
+    
+    # Apply approximations
+    english_tokens = english_chars * 0.3
+    russian_tokens = russian_chars * 0.6
+    space_tokens = spaces * 0.1
+    punctuation_tokens = punctuation * 0.2
+    
+    total_tokens = english_tokens + russian_tokens + space_tokens + punctuation_tokens
+    
+    # Add base overhead for special tokens
+    total_tokens *= 0.1 # + 10%
+    
+    result = {
+        "estimated_tokens": round(total_tokens),
+        "breakdown": {
+            "english_chars": english_chars,
+            "russian_chars": russian_chars,
+            "spaces": spaces,
+            "punctuation": punctuation,
+            "english_tokens": round(english_tokens, 1),
+            "chinese_tokens": round(russian_tokens, 1),
+            "space_tokens": round(space_tokens, 1),
+            "punctuation_tokens": round(punctuation_tokens, 1)
+        },
+        "text_length": len(text),
+        "approximation_rules": "English: 0.3, Russian: 0.6, Space: 0.1, Punctuation: 0.2"
+    }
+    
+    print("\nToken estimation result:", json.dumps(result, indent=2), "\n\n")
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
+extended_tool_functions["estimate_tokens"] = estimate_tokens
+extended_tool_list.append(
+    {
+        "type": "function",
+        "function": {
+            "name": "estimate_tokens",
+            "description": "Estimates token count for given text using DeepSeek approximation rules. Returns token count and breakdown.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "Text to estimate token count for."
+                    }
+                },
+                "required": ["text"]
+            },
+        }
+    },
+)
+
 
 ### def check_memory_consistency(**kwargs):
 def check_memory_consistency(**kwargs):
@@ -529,6 +600,7 @@ def check_memory_consistency(**kwargs):
     print("\nMemory consistency check result:", result, "\n\n")
     return result
 
+extended_tool_functions["check_memory_consistency"] = check_memory_consistency
 extended_tool_list.append({
     "type": "function",
     "function": {
@@ -541,4 +613,5 @@ extended_tool_list.append({
     }
 })
 
-extended_tool_functions["check_memory_consistency"] = check_memory_consistency
+
+### ---
