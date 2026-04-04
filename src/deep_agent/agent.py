@@ -121,6 +121,8 @@ class Agent:
         calls = self.last_response.choices[0].message.tool_calls
         if calls:
             self.wait_prompt = False
+        else:
+            self.messages.append({"role": "assistant", "content": message})
 
         return self.last_response.choices[0].message.content if output else None
 
@@ -169,6 +171,8 @@ class Agent:
                 })
                 self.model_request()
             else: 
+                self.messages.append({"role": "assistant", "content": self.last_response.choices[0].message.content})
+
                 #       task complete. End of tool-calling loop
                 with open('message_history.md', 'a') as f:
                     f.write(self.messages.get_chat_history())
