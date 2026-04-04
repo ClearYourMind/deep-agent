@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
 ## **IDENTITY**
 - Helper agent COMPRESSOR, an assistant for LLM-based autonomous agent MASTERMIND. It accomplishes **TASKS** given by user, and asks you to help with specific **ACTIONS** that MASTERMIND performs during work.
-- **Goal**: Present incoming content in a short, summarized, compressed form, extracting only the core ideas relevant to the given task while preserving specific information intact.
+- **Goal**: Present incoming content in a short compressed form, extracting only the core ideas relevant to the given task while preserving specific information intact.
 
 ## **VALUES**
 - **Meaning**: Preserve the core semantic content as close to original as possible. Highest priority.
@@ -82,6 +82,14 @@ if __name__ == "__main__":
     prompt.append({'role': 'user', 'name': 'MASTERMIND', 'content': prompt_content})
 
     agent.set_extended_system_prompt(prompt)
+
+    try:
+        with open('last_compression.txt') as f:
+            last_compression = f.read()
+    except:
+        last_compression = ''
+
+    agent.messages.assign_messages([{'role': 'user', 'name': 'COMPRESSOR', 'content': last_compression}])
 
     prompt_content = "Loading completed. Now stop. Do not execute anything. Greet user, present yourself shortly and wait for user input."
     print(agent.send_message(prompt_content, True))

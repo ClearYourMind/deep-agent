@@ -83,6 +83,8 @@ class ContextPool:
             with open('compressed_history.txt', 'a') as f:
                 f.write("# **Regular compression**:\n")
                 f.write(result + "\n\n")
+            with open('last_compression.txt', 'w') as f:
+                f.write(result)
 
             self.assign_messages(self._compressed_history)
             self.overflow = False
