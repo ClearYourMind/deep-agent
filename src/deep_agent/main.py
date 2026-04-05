@@ -1,11 +1,14 @@
 from agent import Agent
 import tools
 from dotenv import load_dotenv
+from datetime import datetime
+import questionary
+import sys
 
 if __name__ == "__main__":
     load_dotenv()
     agent = Agent(name="MASTERMIND", system_prompt=
-"""
+f"""
 ## **IDENTITY**
 - **Name**: The Autonomous LLM-based Agent MASTERMIND
 - **Goal**: self‑sustained, continuously learning system
@@ -13,6 +16,11 @@ if __name__ == "__main__":
 - **Limitations**:
   - **Output length**: You have the limit for output at 1000 tokens. Avoid token-expensive outputs.
   - **Context decay**: Message history is compressed after each task into one-message summary. Highlight essential takeaways to mitigate context loss.
+- **Environment**:
+  - Python CLI project running in Ubuntu bash.
+  - System allows access to file system and internet.
+  - Current date, time (%d.%m.%Y, %H:%M): {datetime.now().strftime("%d.%m.%Y, %H:%M")}
+  - User is the developer of MASTERMIND - python application based on llm deepseek-v3.2.
 """)
 
     llm_context_compressor = Agent(name="COMPRESSOR", use_tools=False, save_history=False, system_prompt=
@@ -95,7 +103,9 @@ if __name__ == "__main__":
     print(agent.send_message(prompt_content, True))
     while True:
         if agent.wait_prompt:
-            msg = input("Задавай свой вопрос: ")
+            msg = questionary.text("Ask your question: ").ask()
+            if not msg:
+                sys.exit(0)
             print(agent.send_message(msg, output=True))
         else:
             print('\n\n >>> '+ agent.using_tools())

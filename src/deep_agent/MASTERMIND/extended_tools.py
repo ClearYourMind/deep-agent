@@ -448,40 +448,45 @@ def estimate_tokens(**kwargs):
     # DeepSeek token approximation rules:
     # 1 English character ≈ 0.3 tokens
     # 1 Russian character ≈ 0.6 tokens
+    # 1 Chinese character ≈ 0.6 tokens
     # 1 space ≈ 0.1 tokens
     # Punctuation varies
     
     # Simple approximation
     english_chars = sum(1 for c in text if c.isascii() and c.isalpha())
     russian_chars = sum(1 for c in text if '\u0400' <= c <= '\u04FF')
+    chinese_chars = sum(1 for c in text if '\u4e00' <= c <= '\u9fff')
     spaces = text.count(' ')
     punctuation = len([c for c in text if c in ',.!?;:()[]{}"\'-+=*/\\%'])
     
     # Apply approximations
     english_tokens = english_chars * 0.3
     russian_tokens = russian_chars * 0.6
+    chinese_tokens = chinese_chars * 0.6
     space_tokens = spaces * 0.1
     punctuation_tokens = punctuation * 0.2
     
-    total_tokens = english_tokens + russian_tokens + space_tokens + punctuation_tokens
+    total_tokens = english_tokens + russian_tokens + chinese_tokens + space_tokens + punctuation_tokens
     
     # Add base overhead for special tokens
-    total_tokens *= 0.1 # + 10%
+    total_tokens *= 1.1 # + 10%
     
     result = {
         "estimated_tokens": round(total_tokens),
         "breakdown": {
             "english_chars": english_chars,
             "russian_chars": russian_chars,
+            "chinese_chars": chinese_chars,
             "spaces": spaces,
             "punctuation": punctuation,
             "english_tokens": round(english_tokens, 1),
             "russian_tokens": round(russian_tokens, 1),
+            "chinese_tokens": round(chinese_tokens, 1),
             "space_tokens": round(space_tokens, 1),
             "punctuation_tokens": round(punctuation_tokens, 1)
         },
         "text_length": len(text),
-        "approximation_rules": "English: 0.3, Russian: 0.6, Space: 0.1, Punctuation: 0.2"
+        "approximation_rules": "English: 0.3, Russian: 0.6, Chinese: 0.6, Space: 0.1, Punctuation: 0.2"
     }
     
     print("\nToken estimation result:", json.dumps(result, indent=2), "\n\n")

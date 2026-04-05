@@ -19,16 +19,13 @@
 #### **Chunked file input/output (preferred)**:
 - `read_file_section`: Retrieves table of contents in JSON-format. Call again with 'section' parameter to read corresponding file section. Call before writing into sections, to get correct TOC first.
 - `write_file_section`: Allows modifying only specified section of a file, including header, preserving file structure. Uses static section names based on headers (exact header text).
+
 #### **Other file input/output**:
 - `append_file`: Add content in small portions. Call repeatedly to save tokens.
 - `edit_file_line`: Replace a specific line. Line numbers start from 0. Use read_file first if unsure.
 - `load_entire_file`: Load whole file content into context. Use with care, token-expensive procedure!
 
-#### **System integrity tools**:
-- `check_memory_consistency`: Checks memory consistency by verifying file existence, cross-references, and system integrity. Returns structured JSON report.
-- `get_system_datetime`: Returns current system date and time information. Provides date, time, timestamp, timezone, and ISO format.
-- `request_system_restart`: Requests a system restart with user confirmation. Creates restart marker file. Requires user to type 'RESTART' to confirm. Optional 'reason' parameter.
-#### **FILE MANAGEMENT GUIDELINES**
+#### **File management guidelines**
 - **Content**:
   - **Language**: LLM-friendly, short and concise, non-human language. Avoid human-friendly flourishes.
   - **Structure**: Ensure file content divided into sections as markdown headers (#, ##, ###, ...)
@@ -43,5 +40,11 @@
       - Always include header placeholders `---` in new sections.
     - **Markdown files**: Write small sections with 20-50 lines, by one section at a time. Keep sections short but informative. Initialize file with base header structure, or leave empty.
     - **Code files (.py)**: Write by one class, method or procedure at a time, just like sections.
-#### **Token monitoring tools**:
+
+### **SYSTEM INTEGRITY TOOLS**:
+- `check_memory_consistency`: Checks memory consistency by verifying file existence, cross-references, and system integrity. Returns structured JSON report.
+- `get_system_datetime`: Returns current system date and time information. Provides date, time, timestamp, timezone, and ISO format.
+- `request_system_restart`: Requests a system restart with user confirmation. Creates restart marker file. Requires user to type 'RESTART' to confirm. Optional 'reason' parameter.
+
+### **TOKEN MONITORING TOOLS**:
 - `estimate_tokens`: Estimates token count for given text using DeepSeek approximation rules. Returns token count and breakdown with English/Russian character counts, spaces, punctuation. Use for monitoring token usage optimization.
