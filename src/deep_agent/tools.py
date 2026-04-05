@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import questionary
 from MASTERMIND.extended_tools import extended_tool_functions, extended_tool_list
 
 max_search_result_length = 3000
@@ -56,8 +57,8 @@ def think(**kwargs):
 	
 def ask_clarification(**kwargs):
     print("called 'ask_clarification' tool!")
-    print("argument passed: 'question' = " + kwargs["question"])
-    answer = input()
+    #    print("argument passed: 'question' = " + kwargs["question"])
+    answer = questionary.text(kwargs["question"]).ask()
     return answer
 
 

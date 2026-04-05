@@ -77,8 +77,8 @@ class ContextPool:
 """
             helper_message += self.get_chat_history(self._messages)
             result = helper_agent.send_message(helper_message, output=True)
-            print("\nCompressed context:\n", result)
             self._compressed_history.append({"role": "system", "name": "COMPRESSOR", "content": result})
+            print("\n\nCompressed context:\n", self.get_chat_history(self._compressed_history), "\n\n")
 
             with open('compressed_history.txt', 'a') as f:
                 f.write("# **Regular compression**:\n")
@@ -121,7 +121,7 @@ class Agent:
         self.last_response = response
 
     def send_message(self, message: str, output=False) -> str:
-        self.messages.append({"role": "user", "content": message}, self._save_history)
+        self.messages.append({"role": "user", "name": "Anglophone", "content": message}, self._save_history)
         self.last_user_request = message
         self.model_request()
         calls = self.last_response.choices[0].message.tool_calls
@@ -179,6 +179,8 @@ class Agent:
                 if self._save_history:
                     with open('message_history.md', 'a') as f:
                         f.write("\n----------\n\n")
+                    with open('last_completed_task.md', 'w') as f:
+                        f.write(self.last_response.choices[0].message.content + "\n\n")
                     with open('completed_tasks_history.md', 'a') as f:
                         f.write(self.last_response.choices[0].message.content + "\n\n")
 

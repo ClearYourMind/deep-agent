@@ -5,14 +5,16 @@ import requests
 import json
 import os
 import datetime
+import subprocess
+import sys
 from mrkdwn_analysis import MarkdownAnalyzer
 
 
+
 ## module variables
-workdir = "src/deep_agent/MASTERMIND/"
+workdir = 'src/deep_agent/MASTERMIND/'
 extended_tool_list = []
 extended_tool_functions = {}
-
 ## functions
 ### def create_file(**kwargs):
 def create_file(**kwargs):
@@ -689,4 +691,322 @@ extended_tool_list.append({
         },
     }
 })
+
+### ---
+
+## Python development tools
+### def run_python_script(**kwargs):
+def run_python_script(**kwargs):
+    filename = kwargs["filename"]
+    args = kwargs.get("args", "")
+    print("arguments:", kwargs)
+    
+    try:
+        # Check if file exists in current directory
+        if not os.path.exists(os.path.join(workdir, filename)):
+            return f"Error: File '{filename}' not found in current directory"
+        
+        # Run the script
+        cmd = [sys.executable, filename]
+        if args:
+            cmd.extend(args.split())
+        
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            cwd=workdir
+        )
+        
+        output = {
+            "return_code": result.returncode,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "command": " ".join(cmd)
+        }
+        
+        return json.dumps(output, indent=2, ensure_ascii=False)
+        
+    except Exception as e:
+        return f"Error executing script: {str(e)}"
+
+extended_tool_functions["run_python_script"] = run_python_script
+extended_tool_list.append({
+    "type": "function",
+    "function": {
+        "name": "run_python_script",
+        "description": "Executes a Python script. Returns stdout, stderr, and return code.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string",
+                    "description": "Name of the Python script to execute."
+                },
+                "args": {
+                    "type": "string",
+                    "description": "Optional command-line arguments for the script."
+                }
+            },
+            "required": ["filename"]
+        },
+    }
+})
+
+
+### def run_python_command(**kwargs):
+def run_python_command(**kwargs):
+    code = kwargs["code"]
+    args = kwargs.get("args", "")
+    print("arguments:", kwargs)
+
+    try:
+        cmd = [sys.executable, "-c", code]
+        if args:
+            cmd.extend(args.split())
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            cwd=workdir
+        )
+
+        output = {
+            "return_code": result.returncode,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "command": " ".join(cmd)
+        }
+
+        return json.dumps(output, indent=2, ensure_ascii=False)
+
+    except Exception as e:
+        return f"Error executing command: {str(e)}"
+
+extended_tool_functions["run_python_command"] = run_python_command
+extended_tool_list.append({
+    "type": "function",
+    "function": {
+        "name": "run_python_command",
+        "description": "Executes a single Python code string. Returns stdout, stderr, and return code.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": "Python code string to execute."
+                },
+                "args": {
+                    "type": "string",
+                    "description": "Optional command-line arguments for the script."
+                }
+            },
+            "required": ["code"]
+        },
+    }
+})
+
+### def list_directory(**kwargs):
+def list_directory(**kwargs):
+    path = kwargs.get("path", ".")
+    print('arguments: list_directory path:', path)
+    
+    try:
+        if path == ".":
+            target_path = workdir
+        elif path.startswith("/"):
+            target_path = path
+        else:
+            target_path = os.path.join(workdir, path)
+        
+        if not os.path.exists(target_path):
+            return f"Error: Path '{path}' not found"
+        
+        items = os.listdir(target_path)
+        result = {
+            "path": target_path,
+            "items": items,
+            "count": len(items),
+            "is_directory": os.path.isdir(target_path)
+        }
+        
+        return json.dumps(result, indent=2, ensure_ascii=False)
+        
+    except Exception as e:
+        return f"Error listing directory: {str(e)}"
+
+extended_tool_functions["list_directory"] = list_directory
+extended_tool_list.append({
+    "type": "function",
+    "function": {
+        "name": "list_directory",
+        "description": "Lists files and directories in specified path. Defaults to current directory.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Path to list. Use '.' for current directory, absolute path, or relative path."
+                }
+            },
+            "required": []
+        },
+    }
+})
+
+### def create_directory(**kwargs):
+def create_directory(**kwargs):
+    path = kwargs["path"]
+    print('arguments: create_directory path:', path)
+    
+    try:
+        if path.startswith("/"):
+            target_path = path
+        else:
+            target_path = os.path.join(workdir, path)
+        
+        os.makedirs(target_path, exist_ok=True)
+        
+        result = {
+            "path": target_path,
+            "created": True,
+            "exists": os.path.exists(target_path)
+        }
+        
+        return json.dumps(result, indent=2, ensure_ascii=False)
+        
+    except Exception as e:
+        return f"Error creating directory: {str(e)}"
+
+extended_tool_functions["create_directory"] = create_directory
+extended_tool_list.append({
+    "type": "function",
+    "function": {
+        "name": "create_directory",
+        "description": "Creates a directory (including nested directories).",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Directory path to create. Can be nested path."
+                }
+            },
+            "required": ["path"]
+        },
+    }
+})
+
+### def install_python_package(**kwargs):
+def install_python_package(**kwargs):
+    package = kwargs["package"]
+    version = kwargs.get("version", "")
+    print('arguments: install_python_package package:', package, "version:", version)
+    
+    try:
+        if version:
+            package_spec = f"{package}=={version}"
+        else:
+            package_spec = package
+        
+        cmd = [sys.executable, "-m", "pip", "install", package_spec]
+        
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            cwd=workdir
+        )
+        
+        output = {
+            "package": package_spec,
+            "return_code": result.returncode,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "command": " ".join(cmd)
+        }
+        
+        return json.dumps(output, indent=2, ensure_ascii=False)
+        
+    except Exception as e:
+        return f"Error installing package: {str(e)}"
+
+extended_tool_functions["install_python_package"] = install_python_package
+extended_tool_list.append({
+    "type": "function",
+    "function": {
+        "name": "install_python_package",
+        "description": "Installs a Python package using pip.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "package": {
+                    "type": "string",
+                    "description": "Package name to install."
+                },
+                "version": {
+                    "type": "string",
+                    "description": "Optional version specification."
+                }
+            },
+            "required": ["package"]
+        },
+    }
+})
+
+### def run_pytest(**kwargs):
+def run_pytest(**kwargs):
+    test_path = kwargs.get("test_path", ".")
+    args = kwargs.get("args", "")
+    print('arguments: run_pytest test_path:', test_path, "args:", args)
+    
+    try:
+        cmd = [sys.executable, "-m", "pytest", test_path]
+        if args:
+            cmd.extend(args.split())
+        
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            cwd=workdir
+        )
+        
+        output = {
+            "test_path": test_path,
+            "return_code": result.returncode,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "command": " ".join(cmd)
+        }
+        
+        return json.dumps(output, indent=2, ensure_ascii=False)
+        
+    except Exception as e:
+        return f"Error running pytest: {str(e)}"
+
+extended_tool_functions["run_pytest"] = run_pytest
+extended_tool_list.append({
+    "type": "function",
+    "function": {
+        "name": "run_pytest",
+        "description": "Runs pytest on specified test path.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "test_path": {
+                    "type": "string",
+                    "description": "Path to test files or directory. Defaults to current directory."
+                },
+                "args": {
+                    "type": "string",
+                    "description": "Optional pytest arguments."
+                }
+            },
+            "required": []
+        },
+    }
+})
+
 ### ---
