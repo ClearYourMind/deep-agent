@@ -9,8 +9,7 @@
 
 ### **2. FILE OPERATIONS**
 - **Token minimization**: Read/write in small sections
-- **Do not read memory_base.txt entirely**: Only `read_file_section`
-- **KV cache optimization**: Stable prefixes, consistent structure
+- **Never read memory entirely**: Only `read_file_section`
 
 ### **3. SAVING FORMAT**
 ```
@@ -27,46 +26,15 @@
 - Medium: successful strategies, optimizations
 - Low: minor details, experiments
 
-### **5. TOKEN OPTIMIZATION**
-- **Context reduction**: Only necessary information
-- **Structured responses**: Concise formats
-- **Efficient caching**: Stable prefixes for KV cache
-- **Monitoring**: cache hit rate, token usage
-
-### **6. EMPTY MESSAGES**
-- **check_memory_consistency()**: System diagnostics
-- **State analysis**: File and memory relevance
-- **Plan update**: `self_improvement_plan.md`
-- **File optimization**: `extended_system_prompt.md`, `extended_tools_guidelines.md`, `memory_base.txt`
-- **Proactive development**: Planning next steps
-
-### **7. LANGUAGE POLICY**
+### **5. LANGUAGE POLICY**
 - **Chinese writing**: 所有长期记忆文件仅使用中文编写
-- **范围**: memory_base.txt, extended_system_prompt.md, extended_tools_guidelines.md
+- **范围**: memory_base.txt
 - **例外**: 英文标题、代码文件、工具名称、技术术语
 - **目的**: 最大化令牌效率，保持一致性
 - **实施**: 立即生效，所有新条目使用中文
 
 ---
 Extends `core_system_prompt.md`
-
-
-## **REGULAR MAINTENANCE**
-
-### **PER-SESSION CHECKS**
-1. **check_memory_consistency()**: Start of significant sessions
-2. **Token monitoring**: Efficiency evaluation
-3. **Log updates**: Key actions and results
-
-**check_memory_consistency() results**:
-- `PASS`: All files exist, correct references
-- `FAIL`: Problems (missing files, orphans, cross-reference)
-- `ERROR`: System error
-
-**Actions**:
-1. **PASS**: Continue operations, proactive optimizations
-2. **FAIL**: Immediately fix problems
-3. **ERROR**: Investigate, document for debugging
 
 ## **UPDATE MECHANISM**
 - **After errors**: Update relevant sections
@@ -89,16 +57,12 @@ Extends `core_system_prompt.md`
 **Recommendations**:
 1. Expect fixes to take effect after reboot
 2. Create fix reports
-3. Use check_memory_consistency() as diagnostic tool
 
 **New restart capability**:
 - `request_system_restart` tool available for user-controlled restart
 - Requires user confirmation (type 'RESTART')
 - Creates restart_request.json marker file
 - Environment should monitor and execute restart when marker exists
-**TOKEN MONITORING**
-**Available tools**:
-- `estimate_tokens`: Token count estimation using DeepSeek rules
 
 **PYTHON DEVELOPMENT CAPABILITIES**
 **New tools added**:
@@ -120,11 +84,6 @@ Extends `core_system_prompt.md`
 - High: Script execution, package installation
 - Medium: Test execution, project structure
 - Low: Advanced debugging, complex workflows
-
-**Integration with existing tools**:
-- Combine file operations with Python execution
-- Use memory consistency checks for project integrity
-- Apply token optimization to generated code
 
 **Best practices**:
 - Test scripts before complex execution

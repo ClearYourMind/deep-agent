@@ -1,9 +1,27 @@
-from agent import Agent
+from deepseek_agent import Agent
 import tools
 from dotenv import load_dotenv
 from datetime import datetime
 import questionary
 import sys
+
+NOW = datetime.now().strftime("%d.%m.%Y, %H:%M")
+
+def compose_prompt(prompts_list):
+    composed_prompt = []
+    for prompt_text, prompt_file in prompts_list:
+        prompt_content = prompt_text
+        if prompt_file:
+            try:
+                with open(prompt_file, 'r', encoding='utf-8') as f:
+                    prompt_content += f.read()
+            except:
+                print(f"File {prompt_file} is not loaded")
+        prompt_content += "\n\n---\n\n"
+        composed_prompt.append({'role': 'user', 'name': 'MASTERMIND', 'time': NOW, 'content': prompt_content})
+
+    return composed_prompt
+
 
 if __name__ == "__main__":
     load_dotenv()
@@ -21,7 +39,7 @@ f"""
 - **Environment**:
   - Python CLI project running in Ubuntu bash.
   - System allows access to file system and internet.
-  - Current date, time (%d.%m.%Y, %H:%M): {datetime.now().strftime("%d.%m.%Y, %H:%M")}
+  - Current date, time (%d.%m.%Y, %H:%M): {NOW}.
   - User is the anglophone developer of MASTERMIND - python application based on llm deepseek-v3.2.
 """)
 
@@ -71,58 +89,28 @@ f"""
 
     agent.add_helper_agent(llm_context_compressor)
 
-    prompt = []
-    prompt_content = "# `core_system_prompt.md`:\n\n"
-    with open('src/deep_agent/MASTERMIND/core_system_prompt.md', 'r') as f:
-        prompt_content += f.read() + "\n\n---\n\n"
-    prompt.append({'role': 'user', 'name': 'MASTERMIND', 'content': prompt_content})
-
-    prompt_content = "# `extended_system_prompt.md`:\n\n"
-    with open('src/deep_agent/MASTERMIND/extended_system_prompt.md', 'r') as f:
-        prompt_content += f.read() + "\n\n---\n\n"
-    prompt.append({'role': 'user', 'name': 'MASTERMIND', 'content': prompt_content})
-
-    prompt_content = "# `extended_tools_guidelines.md`:\n\n"
-    with open('src/deep_agent/MASTERMIND/extended_tools_guidelines.md', 'r') as f:
-        prompt_content += f.read() + "\n\n---\n\n"
-    prompt.append({'role': 'user', 'name': 'MASTERMIND', 'content': prompt_content})
-
-    prompt_content = "# `agent_constitution.txt`:\n\n"
-    with open('src/deep_agent/MASTERMIND/agent_constitution.txt', 'r') as f:
-        prompt_content += f.read() + "\n\n---\n\n"
-    prompt.append({'role': 'user', 'name': 'MASTERMIND', 'content': prompt_content})
+    prompt = compose_prompt([
+        ("Loading system files and last session context...\n", None),
+        ("# `core_system_prompt.md`:\n\n", 'src/deep_agent/MASTERMIND/core_system_prompt.md'),
+        ("# `extended_system_prompt.md`:\n\n", 'src/deep_agent/MASTERMIND/extended_system_prompt.md'),
+        ("# `extended_tools_guidelines.md`:\n\n", 'src/deep_agent/MASTERMIND/extended_tools_guidelines.md'),
+        ("# `agent_constitution.txt`:\n\n", 'src/deep_agent/MASTERMIND/agent_constitution.txt')
+    ])
 
     agent.set_extended_system_prompt(prompt)
 
-    try:
-        with open('last_compression.txt', 'r') as f:
-            last_compression = f.read()
-        last_compression = "# **LAST SESSION SUMMARY**\n\n" + last_compression
-    except:
-        last_compression = ''
-    try:
-        with open('last_completed_task.md', 'r') as f:
-            last_task = f.read()
-        last_task = "# **LAST COMPLETED TASK RESULT**\n\n" + last_task
-    except:
-        last_task = ''
+    prompt = compose_prompt([
+        ("# **LAST SESSION SUMMARY**\n\n", 'last_compression.txt'),
+        ("# **LAST COMPLETED TASK**\n\n", 'last_completed_task.md'),
+        ("Loading completed. Stop. Greet user and present yourself shortly. Use English", None)
+    ])
 
-    if last_compression:
-        agent.messages.append({'role': 'user', 'name': 'COMPRESSOR', 'content': last_compression}, False)
-    if last_task:
-        agent.messages.append({'role': 'user', 'name': 'MASTERMIND', 'content': last_task}, False)
-
-    prompt_content = "Loading completed. Now stop. Do not execute anything. Greet user, present yourself shortly and wait for user input. Use English"
-    print(agent.send_message(prompt_content, True))
+    agent.messages.assign_messages(prompt)
+    msg = ''
     while True:
-        if agent.wait_prompt:
-            msg = questionary.text("Ask your question: ").ask()
-            if msg == None:
-                sys.exit(0)
-            print(agent.send_message(msg, output=True))
-        else:
-            print('\n\n >>> '+ agent.using_tools())
-            llm_context_compressor.clear_message_history()
+        agent.run(msg)
+        msg = questionary.text("Ask your question: ").ask()
+        if msg == None:
+            sys.exit(0)
 
-
-
+        agent.messages.append({'role': 'user', 'name': 'Anglophone', 'time': NOW, 'content': msg}, True)

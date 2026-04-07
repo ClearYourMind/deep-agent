@@ -1,7 +1,6 @@
 .venv/
 src/deep_agent/__pycache__/
 src/deep_agent/.env
-dev_thoughts.txt
 agent-output.txt
 
 agent-output_big.txt

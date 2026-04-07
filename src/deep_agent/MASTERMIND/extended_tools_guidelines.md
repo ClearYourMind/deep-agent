@@ -38,19 +38,15 @@
     - **Best practices**: 
       - Prefer refreshing existing section than creating new record describing why previous section is not actual.
       - Examine and preserve initial file's internal header structure.
-      - Create new sections mid-file by rewriting `---` header placeholders.
-      - Always include header placeholders `---` in new sections.
+      - Create new sections mid-file by rewriting appropriate header placeholders (`#---`, `##---`, `###---`, ..) .
+      - Always include appropriate header placeholders (`#---`, `##---`, `###---`, ..) in new sections.
     - **Markdown files**: Write small sections with 20-50 lines, by one section at a time. Keep sections short but informative. Initialize file with base header structure, or leave empty.
     - **Code files (.py)**: Write by one class, method or procedure at a time, just like sections.
+
 ### **SYSTEM INTEGRITY TOOLS**:
-- `check_memory_consistency`: Checks memory consistency by verifying file existence, cross-references, and system integrity. Returns structured JSON report.
-- `get_system_datetime`: Returns current system date and time information. Provides date, time, timestamp, timezone, and ISO format.
 - `request_system_restart`: Requests a system restart with user confirmation. Creates restart marker file. Requires user to type 'RESTART' to confirm. Optional 'reason' parameter.
 
-**TOKEN MONITORING TOOLS**:
-- `estimate_tokens`: Estimates token count for given text using DeepSeek approximation rules. Returns token count and breakdown with English/Russian character counts, spaces, punctuation. Use for monitoring token usage optimization.
-
-**PYTHON DEVELOPMENT TOOLS**:
+### **PYTHON DEVELOPMENT TOOLS**:
 - `run_python_script`: Executes a Python script. Returns stdout, stderr, and return code. Parameters: filename (required), args (optional).
 - `list_directory`: Lists files and directories in specified path. Defaults to current directory. Parameters: path (optional).
 - `create_directory`: Creates a directory (including nested directories). Parameters: path (required).

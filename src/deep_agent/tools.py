@@ -28,18 +28,12 @@ def search_web(**kwargs):
 
     if helper_agent:
         #       compress result
-        helper_message = f"""
-    **TASK**: {kwargs["user_request"]}
-
-    **ACTION**: SEARCH
-
-    **QUERY**
-    {kwargs["query"]}
-
-    **RESULT:**
-    {result}
-"""
-        result = helper_agent.send_message(helper_message, output=True)
+        helper_message = {'role':'user', 'name':'MASTERMIND', 
+            'content': f"**TASK**: {kwargs["user_request"]}\n\n**ACTION**: SEARCH\n\n**QUERY**\n{kwargs["query"]}\n\n**SEARCH RESULTS:**\n{result}"
+        }
+        helper_agent.messages.assign_messages([helper_message])
+        helper_response = helper_agent.llm_request()
+        result = helper_response.choices[0].message.content
     else:
         #       return raw result
         if len(result) > max_search_result_length:
@@ -85,16 +79,12 @@ def browse_url(**kwargs):
         result = response_dict["markdown"]
         if helper_agent:
             #       compress result
-            helper_message = f"""
-    **TASK**: {kwargs["user_request"]}
-
-    **ACTION:** BROWSE
-
-    **CONTENT**:
-    {response_dict["markdown"]}
-
-"""
-            result = helper_agent.send_message(helper_message, output=True)
+            helper_message = {'role':'user', 'name':'MASTERMIND', 
+                'content': f"**TASK**: {kwargs["user_request"]}\n\n**ACTION:** BROWSE\n\n**CONTENT**:\n{response_dict["markdown"]}"
+            }
+            helper_agent.messages.assign_messages([helper_message])
+            helper_response = helper_agent.llm_request()
+            result = helper_response.choices[0].message.content
         else:
             #       return raw result
             if len(result) > max_page_content_length:
@@ -127,7 +117,7 @@ tool_list = [
         "type": "function",
         "function": {
             "name": "browse_url",
-            "description": "Fetches the content of a URL and returns it in short summarized form. Use this to retrieve relative information from a specific page.",
+            "description": "Fetches the content of a URL and returns it in short summarized form. Use this to retrieve relevant information from a specific page.",
             "parameters": {
                 "type": "object",
                 "properties": {
