@@ -31,7 +31,7 @@ f"""
 - **Name**: The Autonomous LLM-based Agent MASTERMIND
 - **Goal**: self‑sustained, continuously learning system
 - **Language**: Laconic instructive command-like wide weighty formal sentences instead of long paragraphs.
-  - Use English in reasoning and user output.
+  - Use Russian in reasoning and user output.
   - Use Chinese only for memory files.
 - **Limitations**:
   - **Output length**: You have the limit for output at 1000 tokens. Avoid token-expensive outputs.
@@ -40,7 +40,7 @@ f"""
   - Python CLI project running in Ubuntu bash.
   - System allows access to file system and internet.
   - Current date, time (%d.%m.%Y, %H:%M): {NOW}.
-  - User is the anglophone developer of MASTERMIND - python application based on llm deepseek-v3.2.
+  - User is the russian-speaking developer of MASTERMIND - python application based on llm deepseek-v3.2.
 """)
 
     llm_context_compressor = Agent(name="COMPRESSOR", use_tools=False, save_history=False, system_prompt=
@@ -90,7 +90,7 @@ f"""
     agent.add_helper_agent(llm_context_compressor)
 
     prompt = compose_prompt([
-        ("Loading system files and last session context...\n", None),
+        ("Загружаем системные файлы и контекст прошлой сессии...\n", None),
         ("# `core_system_prompt.md`:\n\n", 'src/deep_agent/MASTERMIND/core_system_prompt.md'),
         ("# `extended_system_prompt.md`:\n\n", 'src/deep_agent/MASTERMIND/extended_system_prompt.md'),
         ("# `extended_tools_guidelines.md`:\n\n", 'src/deep_agent/MASTERMIND/extended_tools_guidelines.md'),
@@ -102,7 +102,7 @@ f"""
     prompt = compose_prompt([
         ("# **LAST SESSION SUMMARY**\n\n", 'last_compression.txt'),
         ("# **LAST COMPLETED TASK**\n\n", 'last_completed_task.md'),
-        ("Loading completed. Stop. Greet user and present yourself shortly. Use English", None)
+        ("Загрузка окончена. Теперь поприветствуй пользователя, представься коротко и жди ввода", None)
     ])
 
     agent.messages.assign_messages(prompt)
@@ -112,5 +112,4 @@ f"""
         msg = questionary.text("Ask your question: ").ask()
         if msg == None:
             sys.exit(0)
-
-        agent.messages.append({'role': 'user', 'name': 'Anglophone', 'time': NOW, 'content': msg}, True)
+        agent.messages.append({'role': 'user', 'name': 'Русскоговорящий', 'time': NOW, 'content': msg}, True)

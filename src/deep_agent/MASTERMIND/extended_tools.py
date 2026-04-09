@@ -24,7 +24,7 @@ def create_file(**kwargs):
     try:
         with open(workdir + filename, 'w') as f:
             f.write(initial_content)
-        result = f"File '{filename}' created successfully"
+        result = f"File '{filename}' created successfully.\nInitial content written:\n{initial_content}"
     except Exception as e:
         result = f"Error creating file: {str(e)}"
 
@@ -36,8 +36,7 @@ extended_tool_list.append(    {
         "type": "function",
         "function": {
             "name": "create_file",
-            "description": "Creates a new file. Use this to initialize a file. Use append_file to add content in smaller portions to avoid exceeding token limits.",
-
+            "description": "Creates a new file. Initializes it with base header structure."
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -47,7 +46,7 @@ extended_tool_list.append(    {
                     },
                     "initial_content": {
                         "type": "string",
-                        "description": "Optional initial content. Leave empty or provide base header structure."
+                        "description": "Optional initial content (base header structure or empty)."
                     }
                 },
                 "required": ["filename"]
@@ -66,7 +65,7 @@ def append_file(**kwargs):
     try:
         with open(workdir + filename, 'a') as f:
             f.write(content_portion+'\n')
-        result = f"Content appended to '{filename}' successfully"
+        result = f"Content appended to '{filename}' successfully.\nContent portion written:\n{content_portion}"
     except Exception as e:
         result = f"Error appending to file: {str(e)}"
 
@@ -78,7 +77,7 @@ extended_tool_list.append(    {
         "type": "function",
         "function": {
             "name": "append_file",
-            "description": "Appends a portion of content to the end of an existing file. Use this to build large content incrementally. Split the content into multiple small portions (e.g., a few paragraphs or sections at a time) and call append_file repeatedly. This prevents the response from being truncated due to token limits.",
+            "description": "Appends a portion of content to the end of an existing file."
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -112,7 +111,7 @@ def edit_file_line(**kwargs):
             lines[line_number] = line_content + '\n'
             with open(workdir + filename, 'w') as f:
                 f.writelines(lines)
-            result = f"Line {line_number} updated in '{filename}'"
+            result = f"Line {line_number} updated in '{filename}'.\nUpdated line:\n {line_content}"
         else:
             result = f"Line number {line_number} out of range"
     except Exception as e:
@@ -410,7 +409,7 @@ def write_file_section(**kwargs):
     with open(workdir + filename, 'w') as f:
         f.writelines(lines)
 
-    return f"Content is written into section {section_name} of the file {filename} successfully. Current file TOC: \n {toc}"
+    return f"Writing into section {section_name} of the file {filename} is successful. Section content written:\n{content}"
 
 extended_tool_functions["write_file_section"] = write_file_section
 extended_tool_list.append(    {

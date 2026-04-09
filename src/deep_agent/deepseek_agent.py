@@ -53,7 +53,7 @@ class ContextPool:
             messages = self._messages
 
         for message in messages:
-            chat += f"\n**{message['role']}:** [{message['time']}]\n"
+            chat += f"\n**{message['role']}:** [{message.get('time', '--.--.-- --:--:--')}]\n"
             chat += f"{message['content']}\n---\n"
         return chat
 
