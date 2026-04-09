@@ -36,7 +36,7 @@ extended_tool_list.append(    {
         "type": "function",
         "function": {
             "name": "create_file",
-            "description": "Creates a new file. Initializes it with base header structure."
+            "description": "Creates a new file. Initializes it with base header structure.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -77,7 +77,7 @@ extended_tool_list.append(    {
         "type": "function",
         "function": {
             "name": "append_file",
-            "description": "Appends a portion of content to the end of an existing file."
+            "description": "Appends a portion of content to the end of an existing file.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -177,32 +177,6 @@ extended_tool_list.append(    {
                     },
                 },
                 "required": ["filename"]
-            },
-        }
-    },
-)
-
-
-### def get_filelist(**kwargs):
-def get_filelist(**kwargs):
-    try:
-        files = os.listdir(workdir)
-        result = str(files)
-    except Exception as e:
-        result = f"Error reading directory: {str(e)}"
-
-    print("\n\nFile tool result:", result, "\n")
-    return result
-
-extended_tool_functions["get_filelist"] = get_filelist
-extended_tool_list.append(    {
-        "type": "function",
-        "function": {
-            "name": "get_filelist",
-            "description": "Returns a list of filenames currently stored in the MASTERMIND directory. Use this to see what files are available.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
             },
         }
     },
@@ -337,14 +311,14 @@ def read_file_section(**kwargs):
         # return section content
         result = ''
         for header in toc:
-            if header["name"] == section_name:
+            if section_name in header["name"]:
                 # return section contents
                 for n in range(header["start"], header["end"]):
                     result += lines[n]
                 break
         if result == '':
             result = "Section " + section_name + " is not found. Use exact `name` from TOC"
-    print("\nFile tool result:", result, "\n\n")
+    print("\nFile tool result:\n", result, "\n\n")
     return result
 
 extended_tool_functions["read_file_section"] = read_file_section
@@ -409,7 +383,9 @@ def write_file_section(**kwargs):
     with open(workdir + filename, 'w') as f:
         f.writelines(lines)
 
-    return f"Writing into section {section_name} of the file {filename} is successful. Section content written:\n{content}"
+    result = f"Writing into section {section_name} of the file {filename} is successful. Section content written:\n{content}"
+    print("Tool result:\n" + result)
+    return content
 
 extended_tool_functions["write_file_section"] = write_file_section
 extended_tool_list.append(    {
@@ -573,59 +549,6 @@ extended_tool_list.append({
     }
 })
 
-
-### def run_python_command(**kwargs):
-def run_python_command(**kwargs):
-    code = kwargs["code"]
-    args = kwargs.get("args", "")
-    print("arguments:", kwargs)
-
-    try:
-        cmd = [sys.executable, "-c", code]
-        if args:
-            cmd.extend(args.split())
-
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            cwd=workdir
-        )
-
-        output = {
-            "return_code": result.returncode,
-            "stdout": result.stdout,
-            "stderr": result.stderr,
-            "command": " ".join(cmd)
-        }
-
-        return json.dumps(output, indent=2, ensure_ascii=False)
-
-    except Exception as e:
-        return f"Error executing command: {str(e)}"
-
-extended_tool_functions["run_python_command"] = run_python_command
-extended_tool_list.append({
-    "type": "function",
-    "function": {
-        "name": "run_python_command",
-        "description": "Executes a single Python code string. Returns stdout, stderr, and return code.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "description": "Python code string to execute."
-                },
-                "args": {
-                    "type": "string",
-                    "description": "Optional command-line arguments for the script."
-                }
-            },
-            "required": ["code"]
-        },
-    }
-})
 
 ### def list_directory(**kwargs):
 def list_directory(**kwargs):

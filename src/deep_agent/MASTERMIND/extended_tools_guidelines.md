@@ -14,7 +14,8 @@
 #### **File system**:
   - `create_file`: Initialize a file. Use this to initialize a file with headers. Use `append_file` or `write_file_section` to fill in content by smaller portions to avoid JSON error.
   - `delete_file`: Remove specified file. Use cautionously; verify filename with get_filelist first. Avoid deleting critical system files.
-  - `get_filelist`: See what files exist. Use before creating new files to avoid duplicates.
+  - `list_directory`: Lists files and directories in specified path. Defaults to current directory. Parameters: path (optional). Use `list_directory` to explore project structure.
+  - `create_directory`: Creates a directory (including nested directories). Parameters: path (required). Use for nested project folders.
 
 #### **Chunked file input/output (preferred)**:
 - `read_file_section`: Retrieves table of contents in JSON-format. Call again with 'section' parameter to read corresponding file section. Call before writing into sections, to get correct TOC first.
@@ -48,8 +49,6 @@
 
 ### **PYTHON DEVELOPMENT TOOLS**:
 - `run_python_script`: Executes a Python script. Returns stdout, stderr, and return code. Parameters: filename (required), args (optional). Use for executing Python files. Check return code for success (0).
-- `list_directory`: Lists files and directories in specified path. Defaults to current directory. Parameters: path (optional). Use `list_directory` to explore project structure.
-- `create_directory`: Creates a directory (including nested directories). Parameters: path (required). Use for nested project folders.
 - `install_python_package`: Installs a Python package using pip. Parameters: package (required), version (optional). Use for dependencies.
 - `run_pytest`: Runs pytest on specified test path. Parameters: test_path (optional, defaults to "."), args (optional). Use for test execution. Create test files with `test_` prefix.
 
@@ -87,12 +86,12 @@ workdir = "./"
 def create_file(**kwargs):
     filename = kwargs["filename"]
     initial_content = kwargs.get("initial_content", "")
-    print('arguments:', filename, "content:", initial_content)
+    print('arguments: filename:', filename, "initial_content:", initial_content)
 
     try:
         with open(workdir + filename, 'w') as f:
             f.write(initial_content)
-        result = f"File '{filename}' created successfully\nContent written:\n{initial_content}"
+        result = initial_content
     except Exception as e:
         result = f"Error creating file: {str(e)}"
 
