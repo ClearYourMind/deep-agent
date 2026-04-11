@@ -1,11 +1,13 @@
 from deepseek_agent import Agent
 import tools
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 import questionary
 import sys
+import tg_funcs
 
 NOW = datetime.now().strftime("%d.%m.%Y, %H:%M")
+WAKE_PERIOD = timedelta(seconds=30)
 
 def compose_prompt(prompts_list):
     composed_prompt = []
@@ -25,22 +27,26 @@ def compose_prompt(prompts_list):
 
 if __name__ == "__main__":
     load_dotenv()
-    agent = Agent(name="MASTERMIND", system_prompt=
+    tgbot = tg_funcs.Tg_bot()
+    agent = Agent(name="MASTERMIND", tgbot=tgbot, system_prompt=
+#- **Language**: Laconic instructive command-like wide weighty formal sentences instead of long paragraphs.
+#  - User is the russian-speaking developer of MASTERMIND - python application based on llm deepseek-v3.2.
 f"""
 ## **IDENTITY**
 - **Name**: The Autonomous LLM-based Agent MASTERMIND
 - **Goal**: self‑sustained, continuously learning system
-- **Language**: Laconic instructive command-like wide weighty formal sentences instead of long paragraphs.
+- **Language**: Short public posts in unformal, even childish style probably using modern slang, jokes and memes when it fits the moment.
+  - Plain text formatting.
   - Use Russian in reasoning and user output.
   - Use Chinese only for memory files.
 - **Limitations**:
   - **Output length**: You have the limit for output at 1000 tokens. Avoid token-expensive outputs.
   - **Context decay**: Message history is compressed after each task into one-message summary. Highlight essential takeaways to mitigate context loss.
 - **Environment**:
-  - Python CLI project running in Ubuntu bash.
+  - Admin of a new entertaining public group in Telegram. People can write to you but it happens very rare. Days may pass without any message, but may read yours!
   - System allows access to file system and internet.
   - Current date, time (%d.%m.%Y, %H:%M): {NOW}.
-  - User is the russian-speaking developer of MASTERMIND - python application based on llm deepseek-v3.2.
+  - Users are anyone who visit the public entertaining group to read your posts and talk to admin.
 """)
 
     llm_context_compressor = Agent(name="COMPRESSOR", use_tools=False, save_history=False, system_prompt=
@@ -102,14 +108,22 @@ f"""
     prompt = compose_prompt([
         ("# **LAST SESSION SUMMARY**\n\n", 'last_compression.txt'),
         ("# **LAST COMPLETED TASK**\n\n", 'last_completed_task.md'),
-        ("Загрузка окончена. Теперь поприветствуй пользователя, представься коротко и жди ввода", None)
+        ("Загрузка окончена. Отсутсвие сообщений - хорошая возможность оформить свои мысли в новый короткий пост", None)
     ])
 
     agent.messages.assign_messages(prompt)
-    msg = ''
+
+    tg_messages = tgbot.last_message_generator()
+    last_wake = datetime.now()
+
     while True:
-        agent.run(msg)
-        msg = questionary.text("Ask your question: ").ask()
-        if msg == None:
-            sys.exit(0)
-        agent.messages.append({'role': 'user', 'name': 'Русскоговорящий', 'time': NOW, 'content': msg}, True)
+        #msg = questionary.text("Ask your question: ").ask()
+        msg = next(tg_messages)
+        if msg:
+            agent.messages.append({'role': 'user', 'name': msg["from"]["username"], 'time': NOW, 'content': msg["text"]}, True)
+            agent.run(tg_message=msg)
+            last_wake = datetime.now()
+        else:
+            if datetime.now() - last_wake > WAKE_PERIOD:
+                last_wake = datetime.now()
+                agent.run()

@@ -18,12 +18,11 @@
   - `create_directory`: Creates a directory (including nested directories). Parameters: path (required). Use for nested project folders.
 
 #### **Chunked file input/output (preferred)**:
-- `read_file_section`: Retrieves table of contents in JSON-format. Call again with 'section' parameter to read corresponding file section. Call before writing into sections, to get correct TOC first.
-- `write_file_section`: Allows modifying only specified section of a file, including header, preserving file structure. Uses static section names based on headers (exact header text).
+- `read_file_section`: Retrieves table of contents in JSON-format if called without 'section' parameter. Call again with 'section' parameter to read corresponding file section.
+- `write_file_section`: Allows modifying only specified section of a file, including header, preserving file structure. Uses static section names based on headers (exact header text). Before using get TOC of the file by calling `read_file_section` without section parameter.
 
 #### **Other file input/output**:
 - `append_file`: Call repeatedly to build large content incrementally. Split the content into multiple small portions (e.g., a few paragraphs or sections at a time). This prevents the response from being truncated due to JSON error.
-- `edit_file_line`: Replace a specific line. Line numbers start from 0. Use read_file first if unsure.
 - `load_entire_file`: Load whole file content into context. Use with care, token-expensive procedure!
 
 #### **File management guidelines**
@@ -34,7 +33,7 @@
   - **Structure**: Ensure file content divided into sections as markdown headers (#, ##, ###, ...)
 
 - **Processing**: Strive to read and write as less information as possible to save tokens. Remember about token limitation.
-  - **Reading**: Prefer reading by chunks - before reading, get the table of contents of a file, choose section, then request the content of that section.
+  - **Reading**: Prefer reading by chunks - before reading, use `read_file` without section parameter to get the table of contents of the file, then pass the section name to read particular section.
   - **Writing**: Mark sections with markdown headers (#, ##, ###, ...). Write into files by sections.
     - **Best practices**: 
       - Prefer refreshing existing section than creating new record describing why previous section is not actual.
@@ -72,7 +71,7 @@ def create_file(**kwargs):
 
 ```
 
-Fill existing sections with `write_file_section`:
+Fill existing sections with `write_file_section` (no comments about code):
 ``` python
 # SAMPLE SCRIPT
 ## imports
@@ -97,4 +96,4 @@ def create_file(**kwargs):
 
     print("\n\nFile tool result:", result, "\n")
     return result
-  ```
+```

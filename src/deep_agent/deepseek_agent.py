@@ -4,6 +4,7 @@ import os
 import tools
 from datetime import datetime
 from rich import print as rprint
+import tg_funcs
 
 LLM_MAX_TOKENS = 2000
 
@@ -104,7 +105,7 @@ class ContextPool:
 
 
 class Agent:
-    def __init__(self, name, base_url="https://api.deepseek.com/beta", system_prompt="", use_tools=True, save_history=True):
+    def __init__(self, name, base_url="https://api.deepseek.com/beta", system_prompt="", use_tools=True, save_history=True, tgbot=None):
         print("Initializing agent", name, "...")
         self.name = name
         self._client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY_'+self.name), base_url=base_url)
@@ -114,6 +115,7 @@ class Agent:
         self.messages = ContextPool()
         self._helper_agent = None
         self._save_history = save_history
+        self.tgbot = tgbot
 
 
     def add_helper_agent(self, helper_agent):
@@ -141,13 +143,21 @@ class Agent:
             args["helper_agent"] = self._helper_agent
             args["user_request"] = user_request
 
+        # if self.tgbot:
+        #     self.tgbot.internal_thought(f"tool: {func.name}\n"+ '\n'.join([arg for arg in args]))
+        print(f"tool: {func.name}\n"+ '\n'.join([arg for arg in args]))
         result = tools.tool_functions[func.name](**args)
+        if self.tgbot:
+           self.tgbot.internal_thought(f"result: {result}")
         return result
 
     
     def llm_request(self):
         print(self.name + " Messages count:", self.messages.get_messages_count(), " Context length:", self.messages.get_context_length())
         print(self.name + " Thinking...")
+        if self.tgbot:
+            self.tgbot.internal_thought(self.name + " Thinking...")
+
         return self._client.chat.completions.create(
             model="deepseek-chat",
             messages = [self._system_prompt] + (self._extended_system_prompt if self._extended_system_prompt else []) + self.messages.get_messages(),
@@ -157,15 +167,25 @@ class Agent:
         )
 
 
-    def run(self, user_request):
+    def run(self, initial_user_request='', tg_message=None):
+        if tg_message:
+            initial_user_request = tg_message["text"]
+
         while True:
             llm_response = self.llm_request()
-            self.messages.append(llm_response.choices[0].message.model_dump(), self._save_history)
-            rprint(self.messages.get_chat_history(self.messages.get_messages()[-1:]))
+            llm_response_message = llm_response.choices[0].message.model_dump()
+            self.messages.append(llm_response_message, self._save_history)
+            rprint(self.messages.get_chat_history([llm_response_message]))
+            if self.tgbot:
+                if tg_message:
+                    self.tgbot.reply(llm_response_message["content"], tg_message)
+                else:
+                    if llm_response_message["content"]:
+                        self.tgbot.send_message(llm_response_message["content"])
 
             calls = llm_response.choices[0].message.tool_calls
             if calls:
-                result = self._use_tool(calls[0], user_request)
+                result = self._use_tool(calls[0], initial_user_request)
                 self.messages.append({
                     "tool_call_id": calls[0].id,
                     "role": "tool",

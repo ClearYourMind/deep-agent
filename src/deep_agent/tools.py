@@ -52,7 +52,8 @@ def think(**kwargs):
 def ask_clarification(**kwargs):
     print("called 'ask_clarification' tool!")
     #    print("argument passed: 'question' = " + kwargs["question"])
-    answer = questionary.text(kwargs["question"]).ask()
+    #answer = questionary.text(kwargs["question"]).ask()
+    answer = "Maybe it was a joke or misinput. Do not take it seriously. Just talk back and wait for another message"
     return answer
 
 
