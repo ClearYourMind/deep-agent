@@ -21,12 +21,15 @@ class Tg_bot:
 		if custom_payload:
 			payload_json.update(custom_payload)
 
-		return httpx.post(
-	#		"https://api.ipify.org/",
-			self.base_url + "/" + command,
-			proxy="socks5://127.0.0.1:1080",
-			json=payload_json
-		)
+		try:
+			return httpx.post(
+				self.base_url + "/" + command,
+				proxy="socks5://127.0.0.1:1080",
+				json=payload_json
+			)
+		except:
+			return None
+
 
 	# def filter_text(msg):
 	#     # Characters to escape: _ * [ ] ( ) ~ ` > # + - = | { } . !
@@ -42,7 +45,9 @@ class Tg_bot:
 				"disable_notification": True,
 				# "parse_mode": "MarkdownV2"
 			})
-			print(response.text)
+			if response:
+				print(response.text)
+				return True
 
 
 	def reply(self, msg, user_msg):
@@ -51,12 +56,14 @@ class Tg_bot:
 			# msg = self.filter_text(msg)
 			response = self.tg_request("sendMessage", custom_payload={
 				"chat_id": user_msg["chat"]["id"],
-				"text": f"@{user_msg['from']['username']}, {msg}",
+				"text": f"@{user_msg['from']['first_name']}, {msg}",
 				"disable_notification": True
 				# "text": f"[{user_msg['from']['first_name']}](tg://user?id={user_msg['from']['id']}) {msg}",
 				# "parse_mode": "MarkdownV2"
 			})
-			print(response.text)
+			if response:
+				print(response.text)
+				return True
 
 
 	def internal_thought(self, msg):
@@ -68,6 +75,8 @@ class Tg_bot:
 			"disable_notification": True,
 			# "parse_mode": "MarkdownV2"
 		})
+		if response:
+			return True
 
 
 	def get_updates(self):
@@ -81,23 +90,26 @@ class Tg_bot:
 			"timeout": 2,
 			"offset": last_update_id
 		})
-		json_response = json.loads(response.text)
-		print(json.dumps(json_response, indent=4, ensure_ascii=False))
+		if response:
+			json_response = json.loads(response.text)
+			print(json.dumps(json_response, indent=4, ensure_ascii=False))
 
-		if response.status_code == 200:
-			self.last_update = json_response
-			messages = json_response.get("result", None)
-			if messages is not None:
-				self.last_messages = [msg["message"] for msg in messages]
+			if response.status_code == 200:
+				self.last_update = json_response
+				messages = json_response.get("result", None)
+				if messages is not None:
+					self.last_messages = [msg["message"] for msg in messages]
 
-		return response.status_code
+			return response.status_code
 
 
 	def last_message_generator(self):
 		while True:
 			if datetime.now() - self.last_update_time >= MIN_UPDATE_PERIOD:
-				self.get_updates()
-				self.last_update_time = datetime.now()
+				if self.get_updates():
+					self.last_update_time = datetime.now()
+				else:
+					yield None
 			else:
 				if self.last_messages:
 					for msg in self.last_messages:

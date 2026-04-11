@@ -6,8 +6,7 @@ from datetime import datetime
 from rich import print as rprint
 import tg_funcs
 
-LLM_MAX_TOKENS = 2000
-
+LLM_MAX_OUTPUT_TOKENS = 2000
 
 def construct_history(prompts_list):
     composed_prompt = []
@@ -20,7 +19,7 @@ def construct_history(prompts_list):
             except:
                 print(f"File {prompt_file} is not loaded")
         prompt_content += "\n\n---\n\n"
-        composed_prompt.append({'role': 'user', 'name': 'MASTERMIND', 'time': NOW, 'content': prompt_content})
+        composed_prompt.append({'role': 'user', 'name': 'MASTERMIND', 'content': prompt_content})
 
     return composed_prompt
 
@@ -123,7 +122,7 @@ class ContextPool:
 
 class Agent:
     def __init__(self, name, base_url="https://api.deepseek.com/beta", system_prompt="", base_prompts="", last_memory="",  use_tools=True, save_history=True, tgbot=None):
-        print("Initializing agent", name, "...")
+        print("Initializing agent", name, "... ", end='')
         self.name = name
         self._client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY_'+self.name), base_url=base_url)
         self._system_prompt = {"role": "system", "name": "Creator", "content": system_prompt}
@@ -133,7 +132,9 @@ class Agent:
         self._helper_agent = None
         self._save_history = save_history
         self.tgbot = tgbot
-
+        if last_memory:
+            self.messages.assign_messages(construct_history(last_memory))
+        print("Done")
 
     def add_helper_agent(self, helper_agent):
         self._helper_agent = helper_agent
@@ -170,14 +171,16 @@ class Agent:
         print(self.name + " Messages count:", self.messages.get_messages_count(), " Context length:", self.messages.get_context_length())
         print(self.name + " Thinking...")
         if self.tgbot:
-            self.tgbot.internal_thought(self.name + " Thinking...")
+            self.tgbot.internal_thought("Обдумываю дальнейшие действия...")
 
         return self._client.chat.completions.create(
             model="deepseek-chat",
-            messages = [self._system_prompt] + construct_history(self.base_prompts) + self.messages.get_messages(),
+            messages = [self._system_prompt] + construct_history(self._base_prompts) + self.messages.get_messages(),
             tools=tools.tool_list if self._use_tools else [],
             stream=False,
-            max_tokens=LLM_MAX_TOKENS
+            max_tokens=LLM_MAX_OUTPUT_TOKENS,
+            temperature=1.3
+
         )
 
 
@@ -213,7 +216,7 @@ class Agent:
                             self.tgbot.send_message(llm_response_message["content"])
                 break
 
-        self.tgbot.internal_thought("Done!")
+        self.tgbot.internal_thought("Готово!")
         #       task complete. Tool-calling loop ended
         if self._save_history:
             with open('message_history.md', 'a', encoding='utf-8') as f:

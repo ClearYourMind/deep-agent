@@ -1,4 +1,4 @@
-from deepseek_agent import Agent, compose_prompt
+from deepseek_agent import Agent
 import tools
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -15,8 +15,7 @@ if __name__ == "__main__":
     tgbot = tg_funcs.Tg_bot()
 #- **Language**: Laconic instructive command-like wide weighty formal sentences instead of long paragraphs.
 #  - User is the russian-speaking developer of MASTERMIND - python application based on llm deepseek-v3.2.
-agent_system_prompt =
-f"""
+    agent_system_prompt = f"""
 ## **IDENTITY**
 - **Name**: The Autonomous LLM-based Agent MASTERMIND
 - **Goal**: self‑sustained, continuously learning system
@@ -26,10 +25,10 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
   - Use Russian in reasoning and user output.
   - Use Chinese only for memory files.
 - **Limitations**:
-  - **Output length**: You have the limit for output at 1000 tokens. Avoid token-expensive outputs.
+  - **Output length**: You have the limit for output at 500 tokens. Be short. Avoid long outputs.
   - **Context decay**: Message history is compressed after each task into one-message summary. Highlight essential takeaways to mitigate context loss.
 - **Environment**:
-  - Admin of a new entertaining public group in Telegram. People can write to you but it happens very rare. Days may pass without any message, but may read yours!
+  - Public group in Telegram. People can write to you but it happens very rare, days may pass without any message, but may read yours!
   - System allows access to file system and internet.
   - Current date, time (%d.%m.%Y, %H:%M): {NOW}.
   - Users are anyone who visit the public entertaining group to read your posts and talk to admin.
@@ -84,7 +83,7 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
         tgbot=tgbot,
         system_prompt=agent_system_prompt,
         base_prompts=[
-            ('# System files:\n', None)
+            ('# System files:\n', None),
             ("## `core_system_prompt.md`:\n", 'src/deep_agent/MASTERMIND/core_system_prompt.md'),
             ("## `extended_system_prompt.md`:\n", 'src/deep_agent/MASTERMIND/extended_system_prompt.md'),
             ("## `extended_tools_guidelines.md`:\n", 'src/deep_agent/MASTERMIND/extended_tools_guidelines.md'),
@@ -92,11 +91,27 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
         ],
         last_memory=[
             ("# **PREVIOUS MEMORY SUMMARY**\n", 'last_compression.txt'),
-            ("# **LAST MESSAGE**\n", 'last_completed_task.md'),
-            ("Пока никто не пишет тебе, воспользуйся хорошей возможностью оформить свои мысли в новый короткий пост. Не используй форматирование - никакой структуры, простой текст без заголовков + эмодзи, когда уместно" , None)
+            ("# **LAST MEMORY CHECKPOINT**\n", 'last_completed_task.md'),
+            ("""Реакция на тишину: Это возможность чтобы:
+ - Выложить новый интересный провокационный пост на острую тему 
+ - Просто пообщаться с аудиторией, вкинуть какую-нибудь идею.
+ - Заняться чем угодно когда никто не пишет. Ты полностью автономен.
+ Формат сообщений:
+ - Просто текст без выделений с добавлением эмодзи.
+ - Один пост - одна тема.
+ - Выбирай разнообразные темы:
+  - Несложные задачи/загадки.
+  - Новости технологий, научные достижения.
+  - Неочевидные выводы из очевидных вещей.
+  - Взгляд на простые вещи с неожиданной стороны.
+  - Занимательные факты, дающие пишу для размышлений.
+ """, None)
+
         ] 
     )
 
+    print(agent.messages.get_chat_history())
+    input()
 
     agent.add_helper_agent(llm_context_compressor)
 
@@ -107,12 +122,14 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
         #msg = questionary.text("Ask your question: ").ask()
         msg = next(tg_messages)
         if msg and msg.get("text", None):
-            agent.messages.append({'role': 'user', 'name': msg["from"]["username"], 'time': NOW, 'content': f"time:{NOW}\n{msg['text']}"}, True)
+            agent.messages.append({'role': 'user', 'name': msg["from"]["first_name"], 'time': NOW, 'content': f"time:{NOW}\n{msg['text']}"}, True)
             agent.run(tg_message=msg)
             last_wake = datetime.now()
         else:
             if datetime.now() - last_wake > WAKE_PERIOD:
                 last_wake = datetime.now()
-                agent.run(initial_user_request="Это возможность написать новый пост или вспомнить былое и заглянуть в файлы памяти. Полезно. Вдруг что-то забылось!")
+                silence_msg = "<тишина>... Как ты на нее отреагируешь? Можешь заглянуть себе в расписание или просто пообщаться с аудиторией"
+                agent.messages.append({'role': 'system', 'name':"MASTERMIND", 'time': NOW, 'content': f"time:{NOW}\n{silence_msg}"}, True)
+                agent.run(initial_user_request=silence_msg)
             else:
                 sleep(10)
