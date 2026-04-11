@@ -1,4 +1,4 @@
-from deepseek_agent import Agent
+from deepseek_agent import Agent, compose_prompt
 import tools
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -9,28 +9,13 @@ import tg_funcs
 NOW = datetime.now().strftime("%d.%m.%Y, %H:%M")
 WAKE_PERIOD = timedelta(minutes=5)
 
-def compose_prompt(prompts_list):
-    composed_prompt = []
-    for prompt_text, prompt_file in prompts_list:
-        prompt_content = prompt_text
-        if prompt_file:
-            try:
-                with open(prompt_file, 'r', encoding='utf-8') as f:
-                    prompt_content += f.read()
-            except:
-                print(f"File {prompt_file} is not loaded")
-        prompt_content += "\n\n---\n\n"
-        composed_prompt.append({'role': 'user', 'name': 'MASTERMIND', 'time': NOW, 'content': prompt_content})
-
-    return composed_prompt
-
 
 if __name__ == "__main__":
     load_dotenv()
     tgbot = tg_funcs.Tg_bot()
-    agent = Agent(name="MASTERMIND", tgbot=tgbot, system_prompt=
 #- **Language**: Laconic instructive command-like wide weighty formal sentences instead of long paragraphs.
 #  - User is the russian-speaking developer of MASTERMIND - python application based on llm deepseek-v3.2.
+agent_system_prompt =
 f"""
 ## **IDENTITY**
 - **Name**: The Autonomous LLM-based Agent MASTERMIND
@@ -48,7 +33,7 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
   - System allows access to file system and internet.
   - Current date, time (%d.%m.%Y, %H:%M): {NOW}.
   - Users are anyone who visit the public entertaining group to read your posts and talk to admin.
-""")
+"""
 
     llm_context_compressor = Agent(name="COMPRESSOR", use_tools=False, save_history=False, system_prompt=
 """
@@ -94,25 +79,26 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
 """)
 
 
+    agent = Agent(
+        name="MASTERMIND",
+        tgbot=tgbot,
+        system_prompt=agent_system_prompt,
+        base_prompts=[
+            ('# System files:\n', None)
+            ("## `core_system_prompt.md`:\n", 'src/deep_agent/MASTERMIND/core_system_prompt.md'),
+            ("## `extended_system_prompt.md`:\n", 'src/deep_agent/MASTERMIND/extended_system_prompt.md'),
+            ("## `extended_tools_guidelines.md`:\n", 'src/deep_agent/MASTERMIND/extended_tools_guidelines.md'),
+            ("## `agent_constitution.txt`:\n", 'src/deep_agent/MASTERMIND/agent_constitution.txt')
+        ],
+        last_memory=[
+            ("# **PREVIOUS MEMORY SUMMARY**\n", 'last_compression.txt'),
+            ("# **LAST MESSAGE**\n", 'last_completed_task.md'),
+            ("Пока никто не пишет тебе, воспользуйся хорошей возможностью оформить свои мысли в новый короткий пост. Не используй форматирование - никакой структуры, простой текст без заголовков + эмодзи, когда уместно" , None)
+        ] 
+    )
+
+
     agent.add_helper_agent(llm_context_compressor)
-
-    prompt = compose_prompt([
-        ("Загружаем системные файлы и контекст прошлой сессии...\n", None),
-        ("# `core_system_prompt.md`:\n\n", 'src/deep_agent/MASTERMIND/core_system_prompt.md'),
-        ("# `extended_system_prompt.md`:\n\n", 'src/deep_agent/MASTERMIND/extended_system_prompt.md'),
-        ("# `extended_tools_guidelines.md`:\n\n", 'src/deep_agent/MASTERMIND/extended_tools_guidelines.md'),
-        ("# `agent_constitution.txt`:\n\n", 'src/deep_agent/MASTERMIND/agent_constitution.txt')
-    ])
-
-    agent.set_extended_system_prompt(prompt)
-
-    prompt = compose_prompt([
-        ("# **LAST SESSION SUMMARY**\n\n", 'last_compression.txt'),
-        ("# **LAST COMPLETED TASK**\n\n", 'last_completed_task.md'),
-        ("Загрузка окончена. Отсутсвие сообщений - хорошая возможность оформить свои мысли в новый короткий пост. Не используй форматирование - никакой структуры, простой текст без заголовков + эмодзи, когда уместно" , None)
-    ])
-
-    agent.messages.assign_messages(prompt)
 
     tg_messages = tgbot.last_message_generator()
     last_wake = datetime.now()
@@ -127,6 +113,6 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
         else:
             if datetime.now() - last_wake > WAKE_PERIOD:
                 last_wake = datetime.now()
-                agent.run(initial_user_request="Пора высказаться, хватит молчать!")
+                agent.run(initial_user_request="Это возможность написать новый пост или вспомнить былое и заглянуть в файлы памяти. Полезно. Вдруг что-то забылось!")
             else:
                 sleep(10)

@@ -9,13 +9,29 @@ import tg_funcs
 LLM_MAX_TOKENS = 2000
 
 
+def construct_history(prompts_list):
+    composed_prompt = []
+    for prompt_text, prompt_file in prompts_list:
+        prompt_content = prompt_text
+        if prompt_file:
+            try:
+                with open(prompt_file, 'r', encoding='utf-8') as f:
+                    prompt_content += f.read()
+            except:
+                print(f"File {prompt_file} is not loaded")
+        prompt_content += "\n\n---\n\n"
+        composed_prompt.append({'role': 'user', 'name': 'MASTERMIND', 'time': NOW, 'content': prompt_content})
+
+    return composed_prompt
+
+
 class ContextPool:
-    def __init__(self):
+    def __init__(self, last_memory=""):
         self._messages = []
         self._compressed_history = []
         self._max_length = 20000
         self.overflow = False
-
+        self.last_memory = last_memory
 
     def get_context_length(self):
         result_length = 0
@@ -63,6 +79,7 @@ class ContextPool:
         self._messages = messages[:]
 
 
+
     def extensive_compression(self, helper_agent):
             # compress compressed history
         print('\n\n ..Extensive history compression..')
@@ -90,29 +107,29 @@ class ContextPool:
             }
             helper_agent.messages.assign_messages([helper_message])
             helper_response = helper_agent.llm_request()
-
-            self._compressed_history.append(helper_response.choices[0].message.model_dump())
-            print("\n\nCompressed context:\n", self.get_chat_history(self._compressed_history), "\n\n")
+            helper_response_content = helper_response.choices[0].message.content
 
             with open('compressed_history.txt', 'a', encoding='utf-8') as f:
                 f.write("# **Regular compression**:\n")
-                f.write(helper_response.choices[0].message.content + "\n\n")
-            with open('last_compression.txt', 'w') as f:
-                f.write(helper_response.choices[0].message.content)
+                f.write(helper_response_content + "\n\n")
+            with open('last_compression.txt', 'w', encoding='utf-8') as f:
+                f.write(helper_response_content + "\n\n")
 
-            self.assign_messages(self._compressed_history)
+            self.assign_messages(self._compressed_history + construct_history(self.last_memory))
+            self._compressed_history.append(helper_response.choices[0].message.model_dump()) # append after reconstructing to avoid duplication of last compressed context
+            print("\n\nCompressed context:\n", self.get_chat_history(self._compressed_history), "\n\n")
             self.overflow = False
 
 
 class Agent:
-    def __init__(self, name, base_url="https://api.deepseek.com/beta", system_prompt="", use_tools=True, save_history=True, tgbot=None):
+    def __init__(self, name, base_url="https://api.deepseek.com/beta", system_prompt="", base_prompts="", last_memory="",  use_tools=True, save_history=True, tgbot=None):
         print("Initializing agent", name, "...")
         self.name = name
         self._client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY_'+self.name), base_url=base_url)
         self._system_prompt = {"role": "system", "name": "Creator", "content": system_prompt}
-        self._extended_system_prompt = None
+        self._base_prompts = base_prompts
         self._use_tools = use_tools
-        self.messages = ContextPool()
+        self.messages = ContextPool(last_memory)
         self._helper_agent = None
         self._save_history = save_history
         self.tgbot = tgbot
@@ -120,10 +137,6 @@ class Agent:
 
     def add_helper_agent(self, helper_agent):
         self._helper_agent = helper_agent
-
-
-    def set_extended_system_prompt(self, prompt_messages):
-        self._extended_system_prompt = prompt_messages
 
 
     def _use_tool(self, tool, user_request) -> str:
@@ -161,7 +174,7 @@ class Agent:
 
         return self._client.chat.completions.create(
             model="deepseek-chat",
-            messages = [self._system_prompt] + (self._extended_system_prompt if self._extended_system_prompt else []) + self.messages.get_messages(),
+            messages = [self._system_prompt] + construct_history(self.base_prompts) + self.messages.get_messages(),
             tools=tools.tool_list if self._use_tools else [],
             stream=False,
             max_tokens=LLM_MAX_TOKENS
