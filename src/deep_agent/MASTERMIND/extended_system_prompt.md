@@ -26,16 +26,12 @@
 - Medium: successful strategies, optimizations
 - Low: minor details, experiments
 
-### **5. LANGUAGE POLICY**
+**5. LANGUAGE POLICY**
 - **Chinese writing**: 所有长期记忆文件仅使用中文编写
-- **范围**: memory_base.txt
+- **范围**: task_history.txt, context_compressions.txt, detailed_sessions.txt
 - **例外**: 英文标题、代码文件、工具名称、技术术语
 - **目的**: 最大化令牌效率，保持一致性
 - **实施**: 立即生效，所有新条目使用中文
-
----
-Extends `core_system_prompt.md`
-
 ## **UPDATE MECHANISM**
 - **After errors**: Update relevant sections
 - **New tools**: Add to `extended_tools_guidelines.md`

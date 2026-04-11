@@ -28,7 +28,7 @@
 #### **File management guidelines**
 - **Content**:
   - **Language**: LLM-friendly, short and concise, non-human language. Avoid human-friendly flourishes.
-  - **Chinese writing**: 所有长期记忆文件仅使用中文编写 (memory_base.txt, extended_system_prompt.md, extended_tools_guidelines.md)
+  - **Chinese writing**: 所有长期记忆文件仅使用中文编写 (task_history.txt, context_compressions.txt, detailed_sessions.txt, extended_system_prompt.md, extended_tools_guidelines.md)
   - **Exceptions**: 英文标题、代码文件、工具名称、技术术语
   - **Structure**: Ensure file content divided into sections as markdown headers (#, ##, ###, ...)
 
@@ -42,11 +42,10 @@
       - Always include appropriate header placeholders (`#---`, `##---`, `###---`, ..) in new sections.
     - **Markdown files**: Write small sections with 20-50 lines, by one section at a time. Keep sections short but informative. Initialize file with base header structure, or leave empty.
     - **Code files (.py)**: Write by one class, method or procedure at a time, just like sections.
-
 ### **SYSTEM INTEGRITY TOOLS**:
 - `request_system_restart`: Requests a system restart with user confirmation. Creates restart marker file. Requires user to type 'RESTART' to confirm. Optional 'reason' parameter.
 
-### **PYTHON DEVELOPMENT TOOLS**:
+**PYTHON DEVELOPMENT TOOLS**:
 - `run_python_script`: Executes a Python script. Returns stdout, stderr, and return code. Parameters: filename (required), args (optional). Use for executing Python files. Check return code for success (0).
 - `install_python_package`: Installs a Python package using pip. Parameters: package (required), version (optional). Use for dependencies.
 - `run_pytest`: Runs pytest on specified test path. Parameters: test_path (optional, defaults to "."), args (optional). Use for test execution. Create test files with `test_` prefix.
@@ -97,3 +96,22 @@ def create_file(**kwargs):
     print("\n\nFile tool result:", result, "\n")
     return result
 ```
+
+**CRAFTED SKILLS LIBRARY**:
+- **Purpose**: Store reusable Python utilities created during problem-solving
+- **Location**: `crafted_skills/` directory
+- **Naming**: Descriptive names like `search_in_files.py`, `data_parser.py`
+- **Usage**: Call via `run_python_script` with appropriate arguments
+- **First skill**: `search_in_files.py` - search for patterns in text files
+- **Development pattern**:
+  1. Create script to solve immediate problem
+  2. Recognize general utility
+  3. Refactor and move to `crafted_skills/`
+  4. Document in `detailed_sessions.txt`
+  5. Update guidelines
+
+**Best practices**:
+- Test scripts before complex execution
+- Check package availability before installation
+- Use structured project layouts
+- Document Python development in memory_base.txt

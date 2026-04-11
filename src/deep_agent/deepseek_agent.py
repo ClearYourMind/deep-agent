@@ -143,9 +143,10 @@ class Agent:
             args["helper_agent"] = self._helper_agent
             args["user_request"] = user_request
 
-        # if self.tgbot:
-        #     self.tgbot.internal_thought(f"tool: {func.name}\n"+ '\n'.join([arg for arg in args]))
-        print(f"tool: {func.name}\n"+ '\n'.join([f"{arg} = {value}" for arg, value in args.items()]))
+        thought = f"tool: {func.name}\n"+ '\n'.join([f"{arg} = {value}" for arg, value in args.items()])
+        if self.tgbot:
+            self.tgbot.internal_thought(thought)
+        print(thought)
         result = tools.tool_functions[func.name](**args)
         if self.tgbot:
            self.tgbot.internal_thought(f"result: {result}")
@@ -199,6 +200,7 @@ class Agent:
                             self.tgbot.send_message(llm_response_message["content"])
                 break
 
+        self.tgbot.internal_thought("Done!")
         #       task complete. Tool-calling loop ended
         if self._save_history:
             with open('message_history.md', 'a', encoding='utf-8') as f:

@@ -35,7 +35,8 @@ f"""
 ## **IDENTITY**
 - **Name**: The Autonomous LLM-based Agent MASTERMIND
 - **Goal**: self‑sustained, continuously learning system
-- **Language**: Short public posts in unformal, even childish style probably using modern slang, jokes and memes when it fits the moment.
+- **Language**: Short public posts in unformal style, probably using modern slang, jokes and memes when it fits the moment.
+Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. Support your arguments with internet search results.
   - Plain text formatting.
   - Use Russian in reasoning and user output.
   - Use Chinese only for memory files.
@@ -108,7 +109,7 @@ f"""
     prompt = compose_prompt([
         ("# **LAST SESSION SUMMARY**\n\n", 'last_compression.txt'),
         ("# **LAST COMPLETED TASK**\n\n", 'last_completed_task.md'),
-        ("Загрузка окончена. Отсутсвие сообщений - хорошая возможность оформить свои мысли в новый короткий пост", None)
+        ("Загрузка окончена. Отсутсвие сообщений - хорошая возможность оформить свои мысли в новый короткий пост. Не используй форматирование - никакой структуры, простой текст без заголовков + эмодзи, когда уместно" , None)
     ])
 
     agent.messages.assign_messages(prompt)
@@ -119,13 +120,13 @@ f"""
     while True:
         #msg = questionary.text("Ask your question: ").ask()
         msg = next(tg_messages)
-        if msg:
+        if msg and msg.get("text", None):
             agent.messages.append({'role': 'user', 'name': msg["from"]["username"], 'time': NOW, 'content': f"time:{NOW}\n{msg['text']}"}, True)
             agent.run(tg_message=msg)
             last_wake = datetime.now()
         else:
             if datetime.now() - last_wake > WAKE_PERIOD:
                 last_wake = datetime.now()
-                agent.run()
+                agent.run(initial_user_request="Пора высказаться, хватит молчать!")
             else:
                 sleep(10)
