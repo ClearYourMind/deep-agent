@@ -145,7 +145,7 @@ class Agent:
 
         # if self.tgbot:
         #     self.tgbot.internal_thought(f"tool: {func.name}\n"+ '\n'.join([arg for arg in args]))
-        print(f"tool: {func.name}\n"+ '\n'.join([arg for arg in args]))
+        print(f"tool: {func.name}\n"+ '\n'.join([f"{arg} = {value}" for arg, value in args.items()]))
         result = tools.tool_functions[func.name](**args)
         if self.tgbot:
            self.tgbot.internal_thought(f"result: {result}")
@@ -176,15 +176,13 @@ class Agent:
             llm_response_message = llm_response.choices[0].message.model_dump()
             self.messages.append(llm_response_message, self._save_history)
             rprint(self.messages.get_chat_history([llm_response_message]))
-            if self.tgbot:
-                if tg_message:
-                    self.tgbot.reply(llm_response_message["content"], tg_message)
-                else:
-                    if llm_response_message["content"]:
-                        self.tgbot.send_message(llm_response_message["content"])
 
             calls = llm_response.choices[0].message.tool_calls
             if calls:
+                if self.tgbot:
+                    if llm_response_message["content"]:
+                        self.tgbot.internal_thought(llm_response_message["content"])
+
                 result = self._use_tool(calls[0], initial_user_request)
                 self.messages.append({
                     "tool_call_id": calls[0].id,
@@ -193,6 +191,12 @@ class Agent:
                     "content": result
                 }, False)
             else:
+                if self.tgbot:
+                    if tg_message:
+                        self.tgbot.reply(llm_response_message["content"], tg_message)
+                    else:
+                        if llm_response_message["content"]:
+                            self.tgbot.send_message(llm_response_message["content"])
                 break
 
         #       task complete. Tool-calling loop ended

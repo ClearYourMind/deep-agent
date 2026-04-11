@@ -3,11 +3,11 @@ import tools
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import questionary
-import sys
+from time import sleep
 import tg_funcs
 
 NOW = datetime.now().strftime("%d.%m.%Y, %H:%M")
-WAKE_PERIOD = timedelta(seconds=30)
+WAKE_PERIOD = timedelta(minutes=5)
 
 def compose_prompt(prompts_list):
     composed_prompt = []
@@ -120,10 +120,12 @@ f"""
         #msg = questionary.text("Ask your question: ").ask()
         msg = next(tg_messages)
         if msg:
-            agent.messages.append({'role': 'user', 'name': msg["from"]["username"], 'time': NOW, 'content': msg["text"]}, True)
+            agent.messages.append({'role': 'user', 'name': msg["from"]["username"], 'time': NOW, 'content': f"time:{NOW}\n{msg['text']}"}, True)
             agent.run(tg_message=msg)
             last_wake = datetime.now()
         else:
             if datetime.now() - last_wake > WAKE_PERIOD:
                 last_wake = datetime.now()
                 agent.run()
+            else:
+                sleep(10)

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from time import sleep
 from datetime import datetime, timedelta
 
-MIN_UPDATE_PERIOD = timedelta(minutes=1)
+MIN_UPDATE_PERIOD = timedelta(seconds=20)
 
 class Tg_bot:
 	def __init__(self):
@@ -35,26 +35,28 @@ class Tg_bot:
 
 
 	def send_message(self, msg):
-		response = self.tg_request("sendMessage", custom_payload={
-			"chat_id": self.chat_id,
-			"text": msg,
-			"disable_notification": True,
-			# "parse_mode": "MarkdownV2"
-		})
-		print(response.text)
+		if msg:
+			response = self.tg_request("sendMessage", custom_payload={
+				"chat_id": self.chat_id,
+				"text": msg,
+				"disable_notification": True,
+				# "parse_mode": "MarkdownV2"
+			})
+			print(response.text)
 
 
 	def reply(self, msg, user_msg):
-		sleep(2)
-		# msg = self.filter_text(msg)
-		response = self.tg_request("sendMessage", custom_payload={
-			"chat_id": user_msg["chat"]["id"],
-			"text": f"@{user_msg['from']['username']}, {msg}",
-			"disable_notification": True
-			# "text": f"[{user_msg['from']['first_name']}](tg://user?id={user_msg['from']['id']}) {msg}",
-			# "parse_mode": "MarkdownV2"
-		})
-		print(response.text)
+		if msg:
+			sleep(2)
+			# msg = self.filter_text(msg)
+			response = self.tg_request("sendMessage", custom_payload={
+				"chat_id": user_msg["chat"]["id"],
+				"text": f"@{user_msg['from']['username']}, {msg}",
+				"disable_notification": True
+				# "text": f"[{user_msg['from']['first_name']}](tg://user?id={user_msg['from']['id']}) {msg}",
+				# "parse_mode": "MarkdownV2"
+			})
+			print(response.text)
 
 
 	def internal_thought(self, msg):

@@ -33,7 +33,7 @@
   - **Structure**: Ensure file content divided into sections as markdown headers (#, ##, ###, ...)
 
 - **Processing**: Strive to read and write as less information as possible to save tokens. Remember about token limitation.
-  - **Reading**: Prefer reading by chunks - before reading, use `read_file` without section parameter to get the table of contents of the file, then pass the section name to read particular section.
+  - **Reading**: Prefer reading by chunks - before reading, use `read_file` without section parameter to get the table of contents of the file. Call again with the section name passed to read particular section.
   - **Writing**: Mark sections with markdown headers (#, ##, ###, ...). Write into files by sections.
     - **Best practices**: 
       - Prefer refreshing existing section than creating new record describing why previous section is not actual.

@@ -326,7 +326,7 @@ extended_tool_list.append(    {
         "type": "function",
         "function": {
             "name": "read_file_section",
-            "description": "Reads file's TOC. Specify section name to read portion of the file contents in specified section.",
+            "description": "Reads file's TOC if section name is omitted. Specify section name to read portion of the file contents in specified section.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -392,7 +392,7 @@ extended_tool_list.append(    {
         "type": "function",
         "function": {
             "name": "write_file_section",
-            "description": "Replaces specified section of the file with output content, including section header. Call read_file_section first to get TOC to know section names",
+            "description": "Replaces specified section of the file with output content, including section header. Call read_file first (without section parameter) to get TOC to know section names",
             "parameters": {
                 "type": "object",
                 "properties": {
