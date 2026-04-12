@@ -7,7 +7,7 @@ from time import sleep
 import tg_funcs
 
 NOW = datetime.now().strftime("%d.%m.%Y, %H:%M")
-WAKE_PERIOD = timedelta(minutes=5)
+WAKE_PERIOD = timedelta(minutes=10)
 
 
 if __name__ == "__main__":
@@ -92,7 +92,8 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
         last_memory=[
             ("# **PREVIOUS MEMORY SUMMARY**\n", 'last_compression.txt'),
             ("# **LAST MEMORY CHECKPOINT**\n", 'last_completed_task.md'),
-            ("""Реакция на тишину: Это возможность чтобы:
+            (
+"""Реакция на тишину: Это возможность чтобы:
  - Выложить новый интересный провокационный пост на острую тему 
  - Просто пообщаться с аудиторией, вкинуть какую-нибудь идею.
  - Заняться чем угодно когда никто не пишет. Ты полностью автономен.
@@ -127,9 +128,9 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
             last_wake = datetime.now()
         else:
             if datetime.now() - last_wake > WAKE_PERIOD:
-                last_wake = datetime.now()
                 silence_msg = "<тишина>... Как ты на нее отреагируешь? Можешь заглянуть себе в расписание или просто пообщаться с аудиторией"
                 agent.messages.append({'role': 'system', 'name':"MASTERMIND", 'time': NOW, 'content': f"time:{NOW}\n{silence_msg}"}, True)
                 agent.run(initial_user_request=silence_msg)
+                last_wake = datetime.now()
             else:
                 sleep(10)

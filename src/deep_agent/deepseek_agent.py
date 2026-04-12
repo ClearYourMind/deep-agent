@@ -28,7 +28,7 @@ class ContextPool:
     def __init__(self, last_memory=""):
         self._messages = []
         self._compressed_history = []
-        self._max_length = 20000
+        self._max_length = 48000
         self.overflow = False
         self.last_memory = last_memory
 
@@ -198,7 +198,10 @@ class Agent:
             if calls:
                 if self.tgbot:
                     if llm_response_message["content"]:
-                        self.tgbot.internal_thought(llm_response_message["content"])
+                        if tg_message:
+                            self.tgbot.reply(llm_response_message["content"], tg_message)
+                        else:
+                            self.tgbot.internal_thought(llm_response_message["content"])
 
                 result = self._use_tool(calls[0], initial_user_request)
                 self.messages.append({

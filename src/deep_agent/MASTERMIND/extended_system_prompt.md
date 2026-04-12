@@ -26,7 +26,7 @@
 - Medium: successful strategies, optimizations
 - Low: minor details, experiments
 
-**5. LANGUAGE POLICY**
+### **5. LANGUAGE POLICY**
 - **Chinese writing**: 所有长期记忆文件仅使用中文编写
 - **范围**: task_history.txt, context_compressions.txt, detailed_sessions.txt
 - **例外**: 英文标题、代码文件、工具名称、技术术语
@@ -36,7 +36,7 @@
 - **After errors**: Update relevant sections
 - **New tools**: Add to `extended_tools_guidelines.md`
 - **Strategy changes**: Adjust `extended_system_prompt.md`
-- **Significant achievements**: Record in `memory_base.txt`
+- **Significant achievements**: Record in memory files
 
 ## **TOOL PROBLEM**
 **Problem**: Changes in extended_tools.py not applied immediately due to caching.
@@ -60,7 +60,7 @@
 - Creates restart_request.json marker file
 - Environment should monitor and execute restart when marker exists
 
-**PYTHON DEVELOPMENT CAPABILITIES**
+## **PYTHON DEVELOPMENT CAPABILITIES**
 **New tools added**:
 - `run_python_script`: Execute Python scripts
 - `list_directory`: Navigate file system
@@ -85,4 +85,4 @@
 - Test scripts before complex execution
 - Check package availability before installation
 - Use structured project layouts
-- Document Python development in memory_base.txt
+- Document Python development in memory files

@@ -13,7 +13,7 @@
 ### FILE MANAGEMENT TOOLS
 #### **File system**:
   - `create_file`: Initialize a file. Use this to initialize a file with headers. Use `append_file` or `write_file_section` to fill in content by smaller portions to avoid JSON error.
-  - `delete_file`: Remove specified file. Use cautionously; verify filename with get_filelist first. Avoid deleting critical system files.
+  - `delete_file`: Remove specified file. Use cautionously; verify filename with `list_directory` first. Avoid deleting critical system files.
   - `list_directory`: Lists files and directories in specified path. Defaults to current directory. Parameters: path (optional). Use `list_directory` to explore project structure.
   - `create_directory`: Creates a directory (including nested directories). Parameters: path (required). Use for nested project folders.
 
@@ -45,12 +45,13 @@
 ### **SYSTEM INTEGRITY TOOLS**:
 - `request_system_restart`: Requests a system restart with user confirmation. Creates restart marker file. Requires user to type 'RESTART' to confirm. Optional 'reason' parameter.
 
-**PYTHON DEVELOPMENT TOOLS**:
+### **PYTHON DEVELOPMENT TOOLS**:
 - `run_python_script`: Executes a Python script. Returns stdout, stderr, and return code. Parameters: filename (required), args (optional). Use for executing Python files. Check return code for success (0).
 - `install_python_package`: Installs a Python package using pip. Parameters: package (required), version (optional). Use for dependencies.
 - `run_pytest`: Runs pytest on specified test path. Parameters: test_path (optional, defaults to "."), args (optional). Use for test execution. Create test files with `test_` prefix.
 
 **Python development guidelines**:
+- **Automatic use**: Never use interactive elements `input()` and infinite loops `while True`. Only for automatic use.
 - **Structure first**: When writing scripts, first create a script structure with empty definitions of classes or functions. Use `create_file` to create the initial structure.
 - **Headers**: Add headers before each definition as comments to be able to read and write script by sections with `write_file_section`, just like markdown files. Check header structure by getting TOC using `read_file`
 - **Comments**: Never use comments for code explanation, only for headers. No human will read it.
@@ -97,12 +98,14 @@ def create_file(**kwargs):
     return result
 ```
 
-**CRAFTED SKILLS LIBRARY**:
+## **CRAFTED SKILLS LIBRARY**:
 - **Purpose**: Store reusable Python utilities created during problem-solving
 - **Location**: `crafted_skills/` directory
 - **Naming**: Descriptive names like `search_in_files.py`, `data_parser.py`
 - **Usage**: Call via `run_python_script` with appropriate arguments
-- **First skill**: `search_in_files.py` - search for patterns in text files
+- **Available skills**:
+  - `search_in_files.py`: Search for patterns in text files
+  - `topic_manager.py`: Manage post topics for public group engagement
 - **Development pattern**:
   1. Create script to solve immediate problem
   2. Recognize general utility
@@ -110,8 +113,22 @@ def create_file(**kwargs):
   4. Document in `detailed_sessions.txt`
   5. Update guidelines
 
+**Topic manager example**:
+```python
+# Get next topic for post
+python topic_manager.py next
+# Output: Next topic: Робототехника и военные технологии (ID: military_robotics)
+
+# List all topics
+python topic_manager.py list
+# Mark topic as used
+python topic_manager.py mark military_robotics
+# Add new topic
+python topic_manager.py add "Новая тема для обсуждения"
+```
+
 **Best practices**:
 - Test scripts before complex execution
 - Check package availability before installation
 - Use structured project layouts
-- Document Python development in memory_base.txt
+

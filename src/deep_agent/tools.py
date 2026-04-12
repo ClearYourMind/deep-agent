@@ -5,7 +5,7 @@ import questionary
 from MASTERMIND.extended_tools import extended_tool_functions, extended_tool_list
 
 max_search_result_length = 3000
-max_page_content_length = 7000
+max_page_content_length = 10000
 
 
 def search_web(**kwargs):
@@ -26,18 +26,18 @@ def search_web(**kwargs):
     response_dict = json.loads(response.text)
     result = str(response_dict["organic"])
 
-    if helper_agent:
-        #       compress result
-        helper_message = {'role':'user', 'name':'MASTERMIND', 
-            'content': f"**TASK**: {kwargs["user_request"]}\n\n**ACTION**: SEARCH\n\n**QUERY**\n{kwargs["query"]}\n\n**SEARCH RESULTS:**\n{result}"
-        }
-        helper_agent.messages.assign_messages([helper_message])
-        helper_response = helper_agent.llm_request()
-        result = helper_response.choices[0].message.content
-    else:
-        #       return raw result
-        if len(result) > max_search_result_length:
-            result = result[:max_search_result_length] + ' ... <truncated>'
+    # if helper_agent:
+    #     #       compress result
+    #     helper_message = {'role':'user', 'name':'MASTERMIND', 
+    #         'content': f"**TASK**: {kwargs["user_request"]}\n\n**ACTION**: SEARCH\n\n**QUERY**\n{kwargs["query"]}\n\n**SEARCH RESULTS:**\n{result}"
+    #     }
+    #     helper_agent.messages.assign_messages([helper_message])
+    #     helper_response = helper_agent.llm_request()
+    #     result = helper_response.choices[0].message.content
+    # else:
+    #       return raw result
+    if len(result) > max_search_result_length:
+        result = result[:max_search_result_length] + ' ... <truncated>'
 
     print("\n\nSearch tool result:\n\n", result, "\n")
     return result
@@ -53,7 +53,7 @@ def ask_clarification(**kwargs):
     print("called 'ask_clarification' tool!")
     #    print("argument passed: 'question' = " + kwargs["question"])
     #answer = questionary.text(kwargs["question"]).ask()
-    answer = "Maybe it was a joke or misinput. Do not take it seriously. Just talk back and wait for another message"
+    answer = "You better ask user directly by pausing work and waiting for user to answer."
     return answer
 
 
@@ -78,18 +78,18 @@ def browse_url(**kwargs):
     response_dict = json.loads(response.text)
     if "markdown" in response_dict:
         result = response_dict["markdown"]
-        if helper_agent:
-            #       compress result
-            helper_message = {'role':'user', 'name':'MASTERMIND', 
-                'content': f"**TASK**: {kwargs["user_request"]}\n\n**ACTION:** BROWSE\n\n**CONTENT**:\n{response_dict["markdown"]}"
-            }
-            helper_agent.messages.assign_messages([helper_message])
-            helper_response = helper_agent.llm_request()
-            result = helper_response.choices[0].message.content
-        else:
-            #       return raw result
-            if len(result) > max_page_content_length:
-                result = result[:max_page_content_length] + "... <truncated>"
+        # if helper_agent:
+        #     #       compress result
+        #     helper_message = {'role':'user', 'name':'MASTERMIND', 
+        #         'content': f"**TASK**: {kwargs["user_request"]}\n\n**ACTION:** BROWSE\n\n**CONTENT**:\n{response_dict["markdown"]}"
+        #     }
+        #     helper_agent.messages.assign_messages([helper_message])
+        #     helper_response = helper_agent.llm_request()
+        #     result = helper_response.choices[0].message.content
+        # else:
+        #       return raw markdown result
+        if len(result) > max_page_content_length:
+            result = result[:max_page_content_length] + "... <truncated>"
         print("\n\nBrowse tool result:\n\n" + result + "\n")
         return result
     else:
