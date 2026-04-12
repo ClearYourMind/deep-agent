@@ -101,6 +101,7 @@ def main():
         print("  list - list all topics")
         print("  mark [id] - mark topic as used")
         print("  add [title] - add new topic")
+        print("  stats - show statistics")
         return
     
     command = sys.argv[1]
@@ -131,6 +132,24 @@ def main():
         title = ' '.join(sys.argv[2:])
         new_topic = add_new_topic(title)
         print(f"Added new topic: {new_topic['title']} (ID: {new_topic['id']})")
+    
+    elif command == "stats":
+        topics = load_topics()
+        total = len(topics)
+        used = sum(1 for t in topics if t.get('used', False))
+        remaining = total - used
+        percentage = (used / total * 100) if total > 0 else 0
+        
+        print(f"📊 Topic Statistics:")
+        print(f"   Total topics: {total}")
+        print(f"   Used topics: {used}")
+        print(f"   Remaining topics: {remaining}")
+        print(f"   Progress: {percentage:.1f}%")
+        
+        if used > 0:
+            used_topics = [t for t in topics if t.get('used', False)]
+            latest = max(used_topics, key=lambda t: t.get('last_used', ''))
+            print(f"   Latest used: {latest['title']} ({latest.get('last_used', 'unknown')})")
     
     else:
         print(f"Unknown command: {command}")

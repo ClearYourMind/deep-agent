@@ -184,10 +184,7 @@ class Agent:
         )
 
 
-    def run(self, initial_user_request='', tg_message=None):
-        if tg_message:
-            initial_user_request = tg_message["text"]
-
+    def run(self, initial_user_request='', chat_id=None):
         while True:
             llm_response = self.llm_request()
             llm_response_message = llm_response.choices[0].message.model_dump()
@@ -198,8 +195,8 @@ class Agent:
             if calls:
                 if self.tgbot:
                     if llm_response_message["content"]:
-                        if tg_message:
-                            self.tgbot.reply(llm_response_message["content"], tg_message)
+                        if chat_id:
+                            self.tgbot.reply(llm_response_message["content"], chat_id)
                         else:
                             self.tgbot.internal_thought(llm_response_message["content"])
 
@@ -212,8 +209,8 @@ class Agent:
                 }, False)
             else:
                 if self.tgbot:
-                    if tg_message:
-                        self.tgbot.reply(llm_response_message["content"], tg_message)
+                    if chat_id:
+                        self.tgbot.reply(llm_response_message["content"], chat_id)
                     else:
                         if llm_response_message["content"]:
                             self.tgbot.send_message(llm_response_message["content"])

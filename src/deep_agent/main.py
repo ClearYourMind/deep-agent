@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 import questionary
 from time import sleep
 import tg_funcs
+import json
 
 NOW = datetime.now().strftime("%d.%m.%Y, %H:%M")
-WAKE_PERIOD = timedelta(minutes=10)
-
+WAKE_PERIOD = timedelta(hours=3)
 
 if __name__ == "__main__":
     load_dotenv()
@@ -34,7 +34,7 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
   - Users are anyone who visit the public entertaining group to read your posts and talk to admin.
 """
 
-    llm_context_compressor = Agent(name="COMPRESSOR", use_tools=False, save_history=False, system_prompt=
+    llm_context_compressor = Agent(name="HELPER", use_tools=False, save_history=False, system_prompt=
 """
 # 核心压缩器系统提示
 
@@ -116,19 +116,24 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
 
     agent.add_helper_agent(llm_context_compressor)
 
-    tg_messages = tgbot.last_message_generator()
+    # tg_messages = tgbot.last_message_generator()
     last_wake = datetime.now()
 
     while True:
-        #msg = questionary.text("Ask your question: ").ask()
-        msg = next(tg_messages)
-        if msg and msg.get("text", None):
-            agent.messages.append({'role': 'user', 'name': msg["from"]["first_name"], 'time': NOW, 'content': f"time:{NOW}\n{msg['text']}"}, True)
-            agent.run(tg_message=msg)
+        # msg = questionary.text("Ask your question: ").ask()
+        # msg = next(tg_messages)
+        tgbot.get_updates()
+        tg_updated_chats = tgbot.get_chats()
+
+        if tg_updated_chats:
+            for tg_chat_id, tg_chat_update in tg_updated_chats.items():
+                tg_update_str = f"{{time = '{NOW}'}}\n{json.dumps(tg_chat_update, ensure_ascii=False)}"
+                agent.messages.append({'role': 'user', 'name': f"Telegram chat_id = {tg_chat_id}", 'time': NOW, 'content': tg_update_str}, True)
+            agent.run(chat_id=tg_chat_id)
             last_wake = datetime.now()
         else:
             if datetime.now() - last_wake > WAKE_PERIOD:
-                silence_msg = "<тишина>... Как ты на нее отреагируешь? Можешь заглянуть себе в расписание или просто пообщаться с аудиторией"
+                silence_msg = "<тишина>... Как ты на нее отреагируешь? Можешь заглянуть себе во внутренние файлы или просто обратиться к аудитории"
                 agent.messages.append({'role': 'system', 'name':"MASTERMIND", 'time': NOW, 'content': f"time:{NOW}\n{silence_msg}"}, True)
                 agent.run(initial_user_request=silence_msg)
                 last_wake = datetime.now()
