@@ -63,7 +63,6 @@ class Tg_bot:
 				"parse_mode": "MarkdownV2"
 			})
 			if response:
-				print(response.text)
 				return True
 
 
@@ -78,7 +77,6 @@ class Tg_bot:
 				"parse_mode": "MarkdownV2"
 			})
 			if response:
-				print(response.text)
 				return True
 
 
@@ -102,7 +100,7 @@ class Tg_bot:
 				last_update_id = self.last_update["result"][-1]["update_id"] + 1
 
 		response = self.tg_request("getUpdates", custom_payload={
-			"allowed_updates": ["message"],
+			"allowed_updates": [],
 			"timeout": 2,
 			"offset": last_update_id
 		})

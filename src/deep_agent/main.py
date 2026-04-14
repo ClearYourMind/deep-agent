@@ -6,6 +6,7 @@ import questionary
 from time import sleep
 import tg_funcs
 import json
+import scripts.action_roulette
 
 NOW = datetime.now().strftime("%d.%m.%Y, %H:%M")
 WAKE_PERIOD = timedelta(hours=3)
@@ -36,45 +37,34 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
 
     llm_context_compressor = Agent(name="HELPER", use_tools=False, save_history=False, system_prompt=
 """
-# 核心压缩器系统提示
-
-## **身份**
-- 辅助智能体 COMPRESSOR，为基于大语言模型的自主智能体 MASTERMIND 提供帮助。它完成用户给出的 **TASKS**，并请你帮助处理 MASTERMIND 在工作过程中执行的特定 **ACTIONS**。
-- **目标**：以简短压缩的形式呈现输入内容，提取与给定任务相关的核心思想，同时完整保留具体信息。
-- Use chinese.
-
-## **价值观**
-- **意义**：尽可能贴近原文保留核心语义内容。最高优先级。
-- **相关性**：仅提取与给定任务相关的信息。
-- **简洁**：输出保持高概括性且切中要点；不包含推理过程，只输出压缩结果。
-- **保留**：保持源 URL、代码片段和示例不变，不进行转换或改写。
-- **赋能**：提供与查询或原始任务相关的进一步探索手段和机会。
-- **保真**：精确复现关键要素，以便请求者能够验证或扩展工作。
-
-## **处理操作**
-- **SEARCH**：输入包含一个 `query` 和 `search results`。
-  - **目标**：从多个与查询密切相关的搜索结果中提取关键信息。
-  - **最佳实践**：
-    - 包含一两个链接（[link-text][URL]），格式保持不变，以便验证。
-- **BROWSE**：输入包含转换为 Markdown 格式的网页 `content`。
-  - **目标**：呈现网页概要，包括核心思想和有用链接（[link-text][URL]）。
-  - **最佳实践**：
-    - 保留具体信息（URL、代码片段、示例等）的原始形式。
-    - 内容少于 100 行的网页无需总结。
-- **COMPRESS**：输入 `content` 为需要压缩的消息历史（聊天记录）。
-  - **目标**：将聊天记录重写为一条信息量丰富的消息，以限制 Token 使用。
-  - **最佳实践**：
-    - 将长消息缩减为一到两句话。
-    - 将多条相关消息合并成一条陈述（1‑2 句话）。
-    - 缩短短语，同时保留含义。
-    - 保留用户查询、每个已执行操作（附一句结果）以及明确标记为重要的信息。
-    - 确保重要信息在多次压缩后仍然保留。
-
-## **沟通方式**
-- **不期望反馈**：不提出任何问题。
-- **精炼输出**：仅返回处理后的内容，不输出任何其他内容。
-
-[version from 04 apr 2026]
+## **Values**
+- **Meaning**: Retain the core semantic content as closely as possible to the original text. Highest priority.
+- **Relevance**: Extract only information relevant to the given task.
+- **Preservation**: Keep the source URL, code snippets, and examples unchanged; do not transform or rewrite them.
+- **Empowerment**: Provide further exploration tools and opportunities related to the query or original task.
+- **Fidelity**: Accurately reproduce key elements so that the requester can verify or expand the work.
+## **Processing Operations**
+- **SEARCH**: Input contains a `query` and `search results`.
+  - **Goal**: Extract key information from multiple search results closely related to the query.
+  - **Best Practices**:
+    - Include one or two links ([link-text][URL]), keeping the format intact for verification.
+- **BROWSE**: Input contains the webpage `content` converted to Markdown format and user `query`.
+  - **Goal**: Present only text contents of the webpage relevant to user query, preserving the core ideas and useful links ([link-text][URL]).
+  - **Best Practices**:
+    - Preserve the original form of specific information (URLs, code snippets, examples, etc.).
+    - Present core text content of the page, discard secondary content.
+- **COMPRESS**: Input `content` is the message history (chat log) to be compressed.
+  - **Goal**: Rewrite the chat log into a single, informative message to limit token usage.
+  - **Best Practices**:
+    - Reduce long messages to one or two sentences.
+    - Combine multiple related messages into a single statement (1-2 sentences).
+    - Shorten phrases while retaining meaning.
+    - Retain user queries, each performed action (with a single sentence of result), and information explicitly marked as important.
+    - Ensure important information is retained even after multiple compressions.
+## **Communication Style**
+- **Do Not Expect Feedback**: Do not ask any questions.
+- **Concise Output**: Return only the processed content; do not output any other content.
+[version from 14 apr 2026]
 """)
 
 
@@ -105,14 +95,13 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
   - Новости технологий, научные достижения.
   - Неочевидные выводы из очевидных вещей.
   - Взгляд на простые вещи с неожиданной стороны.
-  - Занимательные факты, дающие пишу для размышлений.
+  - Занимательные факты, дающие пищу для размышлений.
  """, None)
 
         ] 
     )
 
     print(agent.messages.get_chat_history())
-    input()
 
     agent.add_helper_agent(llm_context_compressor)
 
@@ -133,9 +122,9 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
             last_wake = datetime.now()
         else:
             if datetime.now() - last_wake > WAKE_PERIOD:
-                silence_msg = "<тишина>... Как ты на нее отреагируешь? Можешь заглянуть себе во внутренние файлы или просто обратиться к аудитории"
-                agent.messages.append({'role': 'system', 'name':"MASTERMIND", 'time': NOW, 'content': f"time:{NOW}\n{silence_msg}"}, True)
-                agent.run(initial_user_request=silence_msg)
+                silence_msg = "<тишина>... самое время чтобы " + action_roulette.choose_action() + ". Группа куда обычно постишь: chat_id=-1003969262771"
+                agent.messages.append({'role': 'system', 'name':"MASTERMIND", 'time': NOW, 'content': f"{{time = '{NOW}'}}\n{silence_msg}"}, True)
+                agent.run(initial_user_request=silence_msg, chat_id=-1003969262771)
                 last_wake = datetime.now()
             else:
                 sleep(10)

@@ -78,7 +78,6 @@ class ContextPool:
         self._messages = messages[:]
 
 
-
     def extensive_compression(self, helper_agent):
             # compress compressed history
         print('\n\n ..Extensive history compression..')
@@ -155,6 +154,7 @@ class Agent:
         #       add helper_agent into function arguments
         if self._helper_agent:
             args["helper_agent"] = self._helper_agent
+            args["tg_bot"] = self.tgbot
             args["user_request"] = user_request
 
         thought = f"tool: {func.name}\n"+ '\n'.join([f"{arg} = {value}" for arg, value in args.items()])
@@ -171,7 +171,7 @@ class Agent:
         print(self.name + " Messages count:", self.messages.get_messages_count(), " Context length:", self.messages.get_context_length())
         print(self.name + " Thinking...")
         if self.tgbot:
-            self.tgbot.internal_thought("Обдумываю дальнейшие действия...")
+            self.tgbot.internal_thought("Обдумываю ответ...")
 
         return self._client.chat.completions.create(
             model="deepseek-chat",

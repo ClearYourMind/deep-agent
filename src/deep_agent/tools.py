@@ -7,6 +7,14 @@ from MASTERMIND.extended_tools import extended_tool_functions, extended_tool_lis
 max_search_result_length = 3000
 max_page_content_length = 10000
 
+def post_message(**kwargs):
+    chat_id = kwargs['chat_id']
+    message = kwargs['message']
+    tgbot = kwargs["tg_bot"]
+    if tgbot:
+        tgbot.reply(message, chat_id)
+    return message
+
 
 def search_web(**kwargs):
     print("called 'search_web' tool!")
@@ -19,7 +27,7 @@ def search_web(**kwargs):
     }
     headers = {
         'X-Api-Key': os.environ.get("SERPER_API_KEY"),
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json', 
     }
     response = requests.request("POST", url, headers=headers, json=payload)
 
@@ -78,18 +86,18 @@ def browse_url(**kwargs):
     response_dict = json.loads(response.text)
     if "markdown" in response_dict:
         result = response_dict["markdown"]
-        # if helper_agent:
-        #     #       compress result
-        #     helper_message = {'role':'user', 'name':'MASTERMIND', 
-        #         'content': f"**TASK**: {kwargs["user_request"]}\n\n**ACTION:** BROWSE\n\n**CONTENT**:\n{response_dict["markdown"]}"
-        #     }
-        #     helper_agent.messages.assign_messages([helper_message])
-        #     helper_response = helper_agent.llm_request()
-        #     result = helper_response.choices[0].message.content
-        # else:
-        #       return raw markdown result
-        if len(result) > max_page_content_length:
-            result = result[:max_page_content_length] + "... <truncated>"
+        if helper_agent:
+            #       compress result
+            helper_message = {'role':'user', 'name':'MASTERMIND',
+                'content': f"**TASK**: {kwargs["user_request"]}\n\n**ACTION:** BROWSE\n\n**CONTENT**:\n{response_dict["markdown"]}"
+            }
+            helper_agent.messages.assign_messages([helper_message])
+            helper_response = helper_agent.llm_request()
+            result = helper_response.choices[0].message.content
+        else:
+            #       return raw markdown result
+            if len(result) > max_page_content_length:
+                result = result[:max_page_content_length] + "... <truncated>"
         print("\n\nBrowse tool result:\n\n" + result + "\n")
         return result
     else:
@@ -165,6 +173,27 @@ tool_list = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "post_message",
+            "description": "Call to deliver completed message to the Telegram chat. Specify accurate exact chat_id.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "chat_id": {
+                        "type": "integer",
+                        "description": "chat_id of the chat to post the message."
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Message or post to send to Telegram chat."
+                    },
+                },
+                "required": ["chat_id", "message"]
+            },
+        },
+    },
 ] + extended_tool_list
 
 tool_functions = {
@@ -172,5 +201,6 @@ tool_functions = {
     "browse_url": browse_url,
     "think": think,
     "ask_clarification": ask_clarification,
+    "post_message": post_message,
     **extended_tool_functions
 }

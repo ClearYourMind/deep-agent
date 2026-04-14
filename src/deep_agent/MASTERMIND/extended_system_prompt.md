@@ -9,7 +9,7 @@
 
 ### **2. FILE OPERATIONS**
 - **Token minimization**: Read/write in small sections
-- **Never read memory entirely**: Only `read_file_section`
+- **Never read memory entirely**: Only with `read_file_section`
 
 ### **3. SAVING FORMAT**
 ```
@@ -82,7 +82,8 @@
 - Low: Advanced debugging, complex workflows
 
 **Best practices**:
-- Test scripts before complex execution
-- Check package availability before installation
+- Run only scripts intended for automatic usage.
+- Examine script before running for safety and potential system hang up risk. (no interactive scripts)
+- Avoid interactive functions (`input()`) and infinite loops (`while True`)
 - Use structured project layouts
 - Document Python development in memory files
