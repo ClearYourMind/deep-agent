@@ -121,34 +121,34 @@ def edit_file_line(**kwargs):
     print("\nFile tool result:", result, "\n\n")
     return result
 
-# don't want Agent to use this tool ever
-# extended_tool_functions["edit_file_line"] = edit_file_line
-# extended_tool_list.append({
-#         "type": "function",
-#         "function": {
-#             "name": "edit_file_line",
-#             "description": "Replaces a specific line in a file with new content. Line numbers start from 0. Use this to correct or update specific lines.",
-#             "parameters": {
-#                 "type": "object",
-#                 "properties": {
-#                     "filename": {
-#                         "type": "string",
-#                         "description": "Name of the file to edit."
-#                     },
-#                     "line_number": {
-#                         "type": "integer",
-#                         "description": "The line number to replace (0‑based index)."
-#                     },
-#                     "line_content": {
-#                         "type": "string",
-#                         "description": "The new content for that line."
-#                     }
-#                 },
-#                 "required": ["filename", "line_number", "line_content"]
-#             },
-#         }
-#     }
-# )
+    # don't want Agent to use this tool ever
+    # extended_tool_functions["edit_file_line"] = edit_file_line
+    # extended_tool_list.append({
+    #         "type": "function",
+    #         "function": {
+    #             "name": "edit_file_line",
+    #             "description": "Replaces a specific line in a file with new content. Line numbers start from 0. Use this to correct or update specific lines.",
+    #             "parameters": {
+    #                 "type": "object",
+    #                 "properties": {
+    #                     "filename": {
+    #                         "type": "string",
+    #                         "description": "Name of the file to edit."
+    #                     },
+    #                     "line_number": {
+    #                         "type": "integer",
+    #                         "description": "The line number to replace (0‑based index)."
+    #                     },
+    #                     "line_content": {
+    #                         "type": "string",
+    #                         "description": "The new content for that line."
+    #                     }
+    #                 },
+    #                 "required": ["filename", "line_number", "line_content"]
+    #             },
+    #         }
+    #     }
+    # )
 
 
 ### def load_entire_file(**kwargs):
@@ -223,6 +223,87 @@ extended_tool_list.append(    {
     },
 )
 
+### def copy_file(**kwargs):
+def copy_file(**kwargs):
+    source = kwargs["source"]
+    destination = kwargs["destination"]
+    print('arguments: source:', source, "destination:", destination)
+
+    try:
+        import shutil
+        shutil.copy(workdir + source, workdir + destination)
+        result = f"File '{source}' copied to '{destination}'"
+    except Exception as e:
+        result = f"Error copying file: {str(e)}"
+
+    print("File tool result:", result, "\n\n")
+    return result
+
+extended_tool_functions["copy_file"] = copy_file
+extended_tool_list.append(    {
+        "type": "function",
+        "function": {
+            "name": "copy_file",
+            "description": "Copies a file from source to destination",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "source": {
+                        "type": "string",
+                        "description": "Source file path"
+                    },
+                    "destination": {
+                        "type": "string",
+                        "description": "Destination file path"
+                    },
+                },
+                "required": ["source", "destination"]
+            },
+        }
+    },
+)
+
+### def rename_file(**kwargs):
+def rename_file(**kwargs):
+    old_name = kwargs["old_name"]
+    new_name = kwargs["new_name"]
+    print('arguments: old_name:', old_name, "new_name:", new_name)
+
+    try:
+        import os
+        os.rename(workdir + old_name, workdir + new_name)
+        result = f"File '{old_name}' renamed to '{new_name}'"
+    except Exception as e:
+        result = f"Error renaming file: {str(e)}"
+
+    print("File tool result:", result, "\n\n")
+    return result
+
+extended_tool_functions["rename_file"] = rename_file
+extended_tool_list.append(    {
+        "type": "function",
+        "function": {
+            "name": "rename_file",
+            "description": "Renames a file from old_name to new_name",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "old_name": {
+                        "type": "string",
+                        "description": "Current file name"
+                    },
+                    "new_name": {
+                        "type": "string",
+                        "description": "New file name"
+                    },
+                },
+                "required": ["old_name", "new_name"]
+            },
+        }
+    },
+)
+
+### ---
 
 ## Chunked file IO functions
 ### def __get_headers_and_lines(markdown_file):

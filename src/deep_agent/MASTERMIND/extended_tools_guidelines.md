@@ -16,7 +16,8 @@
   - `delete_file`: Remove specified file. Use cautionously; verify filename with `list_directory` first. Avoid deleting critical system files.
   - `list_directory`: Lists files and directories in specified path. Defaults to current directory. Parameters: path (optional). Use `list_directory` to explore project structure.
   - `create_directory`: Creates a directory (including nested directories). Parameters: path (required). Use for nested project folders.
-
+  - `copy_file`: Copies a file from source to destination. Parameters: source (required), destination (required). Use for backup or duplication of files.
+  - `rename_file`: Renames a file from old_name to new_name. Parameters: old_name (required), new_name (required). Use for file reorganization or naming updates.
 #### **Chunked file input/output (preferred)**:
 - `read_file_section`: Retrieves table of contents in JSON-format if called without 'section' parameter. Call again with 'section' parameter to read corresponding file section.
 - `write_file_section`: Allows modifying only specified section of a file, including header, preserving file structure. Uses static section names based on headers (exact header text). Before using get TOC of the file by calling `read_file_section` without section parameter.
