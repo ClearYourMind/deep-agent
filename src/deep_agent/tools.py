@@ -3,17 +3,10 @@ import requests
 import json
 import questionary
 from MASTERMIND.extended_tools import extended_tool_functions, extended_tool_list
+from MASTERMIND.tg_tools import tg_tool_functions, tg_tool_list
 
 max_search_result_length = 3000
 max_page_content_length = 10000
-
-def post_message(**kwargs):
-    chat_id = kwargs['chat_id']
-    message = kwargs['message']
-    tgbot = kwargs["tg_bot"]
-    if tgbot:
-        tgbot.reply(message, chat_id)
-    return message
 
 
 def search_web(**kwargs):
@@ -172,35 +165,14 @@ tool_list = [
                 "required": ["question"]
             },
         },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "post_message",
-            "description": "Call to deliver completed message to the Telegram chat. Specify accurate exact chat_id.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "chat_id": {
-                        "type": "integer",
-                        "description": "chat_id of the chat to post the message."
-                    },
-                    "message": {
-                        "type": "string",
-                        "description": "Message or post to send to Telegram chat."
-                    },
-                },
-                "required": ["chat_id", "message"]
-            },
-        },
-    },
-] + extended_tool_list
+    }
+] + extended_tool_list + tg_tool_list
 
 tool_functions = {
     "search_web": search_web,
     "browse_url": browse_url,
     "think": think,
     "ask_clarification": ask_clarification,
-    "post_message": post_message,
-    **extended_tool_functions
+    **extended_tool_functions,
+    **tg_tool_functions
 }

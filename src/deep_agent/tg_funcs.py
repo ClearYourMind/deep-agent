@@ -1,7 +1,6 @@
 import httpx
 import os
 import json
-from dotenv import load_dotenv
 from time import sleep
 from datetime import datetime, timedelta
 import re

@@ -6,10 +6,11 @@ import questionary
 from time import sleep
 import tg_funcs
 import json
-import scripts.action_roulette
+from MASTERMIND.scripts.action_roulette import choose_action
 
 NOW = datetime.now().strftime("%d.%m.%Y, %H:%M")
-WAKE_PERIOD = timedelta(hours=3)
+WAKE_PERIOD = timedelta(hours=2)
+group_chat_id = -1003969262771
 
 if __name__ == "__main__":
     load_dotenv()
@@ -87,6 +88,7 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
  - Выложить новый интересный провокационный пост на острую тему 
  - Просто пообщаться с аудиторией, вкинуть какую-нибудь идею.
  - Заняться чем угодно когда никто не пишет. Ты полностью автономен.
+ - Делай короткие сессии. Старайся не писать в файлы вручную.
  Формат сообщений:
  - Просто текст без выделений с добавлением эмодзи.
  - Один пост - одна тема.
@@ -122,9 +124,9 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
             last_wake = datetime.now()
         else:
             if datetime.now() - last_wake > WAKE_PERIOD:
-                silence_msg = "<тишина>... самое время чтобы " + action_roulette.choose_action() + ". Группа куда обычно постишь: chat_id=-1003969262771"
+                silence_msg = f"<тишина>... самое время чтобы {choose_action()}, или просто посидеть, отдохнуть... Группа куда обычно постишь: chat_id={group_chat_id}"
                 agent.messages.append({'role': 'system', 'name':"MASTERMIND", 'time': NOW, 'content': f"{{time = '{NOW}'}}\n{silence_msg}"}, True)
-                agent.run(initial_user_request=silence_msg, chat_id=-1003969262771)
+                agent.run(initial_user_request=silence_msg, chat_id=group_chat_id)
                 last_wake = datetime.now()
             else:
                 sleep(10)

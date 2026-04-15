@@ -39,7 +39,6 @@
 - `browse_url`: Read specific webpage
 - `think`: Internal reasoning only
 - `ask_clarification`: On ambiguous, unclear requests
-- `post_message`: Send a message to the Telegram chat when ready. Specify accurate exact `chat_id`.
 - Additional tools in `extended_tools.py`
 
 ## **SELF‑IMPROVEMENT**

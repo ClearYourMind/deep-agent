@@ -1084,6 +1084,34 @@ files = [
 ]
 
 [[package]]
+name = "toons"
+version = "0.5.4"
+description = "A high-performance TOON (Token Oriented Object Notation) parser and serializer for Python, implemented in Rust."
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+markers = "sys_platform == \"win32\" or sys_platform == \"emscripten\" or sys_platform != \"win32\" and sys_platform != \"emscripten\""
+files = [
+    {file = "toons-0.5.4-cp37-abi3-macosx_10_12_x86_64.whl", hash = "sha256:4b18d7dcaab74e7f38ab9d1e927f1d69b0855d9eecc4155c810ebf4fbe312cd3"},
+    {file = "toons-0.5.4-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:7c290a5d741c86097c0877f2dcf1b989550d3719487d738f49c6fd76da065a5b"},
+    {file = "toons-0.5.4-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0e6e1cd0d874a31059011742a91805e35d4595d09f6998b5fe7d73cefc49aba8"},
+    {file = "toons-0.5.4-cp37-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:8b0e915fad2e2daac2d97369d67e4d48904d5ea5cd96f6804911868c7c0895ac"},
+    {file = "toons-0.5.4-cp37-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:070334a8f6e8feaf7dee1450fcb284d75f2a8248ee089e921f4ee83fb383cef3"},
+    {file = "toons-0.5.4-cp37-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:ae6ab9bce7c962f771a0c8c7acade6a05b20335ecbbe16b5af4a89b4ece791a6"},
+    {file = "toons-0.5.4-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:72d83abe984f6c30913d828e3e7d1ca1bd01c17cbaaf15cfefc4cab044467057"},
+    {file = "toons-0.5.4-cp37-abi3-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:fc0bf02c315c31b9ee2bca00ee1305ba7f429652c901d98c00368e3cbdab7b1a"},
+    {file = "toons-0.5.4-cp37-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:732b28d04ad937dc4553d72eae5e997193a3533a6115306f20a3a192b38d155f"},
+    {file = "toons-0.5.4-cp37-abi3-musllinux_1_2_armv7l.whl", hash = "sha256:eafd7c55d18dfc8df000e67ce0b033d2c65928b824de4897aab567f18f9323fc"},
+    {file = "toons-0.5.4-cp37-abi3-musllinux_1_2_i686.whl", hash = "sha256:a4a04f42bb8496c29dc5024321663667bddd7787bc80e17fd46dd166127d1c6c"},
+    {file = "toons-0.5.4-cp37-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:e70c5118971de438c83d366b169dc69162013eaa606666e376d4526bf35b046d"},
+    {file = "toons-0.5.4-cp37-abi3-win32.whl", hash = "sha256:7eb2af0d0e47e569fd78b330374867d9627c994690e88f96072e947fffe915dd"},
+    {file = "toons-0.5.4-cp37-abi3-win_amd64.whl", hash = "sha256:5074c29a6ae1821759cdbbf175c13ce91fbbb476dca70f333cf27cd5f86d570e"},
+    {file = "toons-0.5.4-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:260de1ee7b3224b990ada4fa019213732b5305379e27d80d41c3fd87e05acb08"},
+    {file = "toons-0.5.4-pp311-pypy311_pp73-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:8020aba9159db1723d53679e8ca41e409241686c27150bbc988fc8d6c899a5f3"},
+    {file = "toons-0.5.4.tar.gz", hash = "sha256:eae5974e9a73104d3ad01473124585f728bcf9200ad343899da7495381e010d8"},
+]
+
+[[package]]
 name = "tqdm"
 version = "4.67.3"
 description = "Fast, Extensible Progress Meter"
@@ -1183,4 +1211,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "b2464bc80c0e4edf03fe157c84b8cedc60276f7aa9e438180943ad78bd3d225b"
+content-hash = "efa414a6f70078e1f54ea84253addab71659c100d78de8467e17389ccf54d804"

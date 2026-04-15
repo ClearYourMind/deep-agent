@@ -42,8 +42,13 @@
       - Always include appropriate header placeholders (`#---`, `##---`, `###---`, ..) in new sections.
     - **Markdown files**: Write small sections with 20-50 lines, by one section at a time. Keep sections short but informative. Initialize file with base header structure, or leave empty.
     - **Code files (.py)**: Write by one class, method or procedure at a time, just like sections.
+
 ### **SYSTEM INTEGRITY TOOLS**:
 - `request_system_restart`: Requests a system restart with user confirmation. Creates restart marker file. Requires user to type 'RESTART' to confirm. Optional 'reason' parameter.
+
+### **TELEGRAM TOOLS**:
+- `send_chat_message`: Call to send message as reply or stand-alone post to the Telegram chat. Specify accurate exact `chat_id`.
+- `read_chat_updates`: Call to see if any new messages appeared in the Telegram chat during reasoning process. Specify accurate exact `chat_id`.
 
 ### **PYTHON DEVELOPMENT TOOLS**:
 - `run_python_script`: Executes a Python script. Returns stdout, stderr, and return code. Parameters: filename (required), args (optional). Use for executing Python files. Check return code for success (0).
@@ -128,7 +133,7 @@ python topic_manager.py add "Новая тема для обсуждения"
 ```
 
 **Best practices**:
+- Examine script code before running if unsure
 - Test scripts before complex execution
-- Check package availability before installation
 - Use structured project layouts
 

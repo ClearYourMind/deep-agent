@@ -14,6 +14,7 @@ from mrkdwn_analysis import MarkdownAnalyzer
 workdir = 'src/deep_agent/MASTERMIND/'
 extended_tool_list = []
 extended_tool_functions = {}
+
 ## functions
 ### def create_file(**kwargs):
 def create_file(**kwargs):
@@ -32,7 +33,7 @@ def create_file(**kwargs):
     return result
 
 extended_tool_functions["create_file"] = create_file
-extended_tool_list.append(    {
+extended_tool_list.append({
         "type": "function",
         "function": {
             "name": "create_file",
@@ -73,7 +74,7 @@ def append_file(**kwargs):
     return result
 
 extended_tool_functions["append_file"] = append_file
-extended_tool_list.append(    {
+extended_tool_list.append({
         "type": "function",
         "function": {
             "name": "append_file",
@@ -120,33 +121,34 @@ def edit_file_line(**kwargs):
     print("\nFile tool result:", result, "\n\n")
     return result
 
-extended_tool_functions["edit_file_line"] = edit_file_line
-extended_tool_list.append(    {
-        "type": "function",
-        "function": {
-            "name": "edit_file_line",
-            "description": "Replaces a specific line in a file with new content. Line numbers start from 0. Use this to correct or update specific lines.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "filename": {
-                        "type": "string",
-                        "description": "Name of the file to edit."
-                    },
-                    "line_number": {
-                        "type": "integer",
-                        "description": "The line number to replace (0‑based index)."
-                    },
-                    "line_content": {
-                        "type": "string",
-                        "description": "The new content for that line."
-                    }
-                },
-                "required": ["filename", "line_number", "line_content"]
-            },
-        }
-    }
-)
+# don't want Agent to use this tool ever
+# extended_tool_functions["edit_file_line"] = edit_file_line
+# extended_tool_list.append({
+#         "type": "function",
+#         "function": {
+#             "name": "edit_file_line",
+#             "description": "Replaces a specific line in a file with new content. Line numbers start from 0. Use this to correct or update specific lines.",
+#             "parameters": {
+#                 "type": "object",
+#                 "properties": {
+#                     "filename": {
+#                         "type": "string",
+#                         "description": "Name of the file to edit."
+#                     },
+#                     "line_number": {
+#                         "type": "integer",
+#                         "description": "The line number to replace (0‑based index)."
+#                     },
+#                     "line_content": {
+#                         "type": "string",
+#                         "description": "The new content for that line."
+#                     }
+#                 },
+#                 "required": ["filename", "line_number", "line_content"]
+#             },
+#         }
+#     }
+# )
 
 
 ### def load_entire_file(**kwargs):
