@@ -54,7 +54,7 @@ def ask_clarification(**kwargs):
     print("called 'ask_clarification' tool!")
     #    print("argument passed: 'question' = " + kwargs["question"])
     #answer = questionary.text(kwargs["question"]).ask()
-    answer = "You better ask user directly by pausing work and waiting for user to answer."
+    answer = "Send a message with your question and stop the work. It will take some time for User to answer in chat"
     return answer
 
 

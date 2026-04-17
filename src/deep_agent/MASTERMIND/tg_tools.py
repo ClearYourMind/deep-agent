@@ -8,10 +8,13 @@
 
 ## imports
 import json
+import time
 
 ## variables
 tg_tool_list = []
 tg_tool_functions = {}
+
+CHAT_REFRESH_TIME = 30
 
 ## def send_chat_message(**kwargs):
 def send_chat_message(**kwargs):
@@ -50,6 +53,7 @@ tg_tool_list.append({
 def read_chat_updates(**kwargs):
 	chat_id = kwargs['chat_id']
 	tgbot = kwargs["tg_bot"]
+	time.sleep(CHAT_REFRESH_TIME)
 	if tgbot:
 		tgbot.get_updates()
 		tg_updated_chats = tgbot.get_chats()
@@ -57,6 +61,7 @@ def read_chat_updates(**kwargs):
 		return json.dumps(tg_new_messages, ensure_ascii=False)
 
 	return "Wrong Tg_bot object"
+
 
 tg_tool_functions["read_chat_updates"] = read_chat_updates
 tg_tool_list.append({

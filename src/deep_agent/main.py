@@ -1,4 +1,5 @@
 from deepseek_agent import Agent
+from deepseek_reasoner_agent import Agent as Agent_r
 import tools
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -50,10 +51,10 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
   - **Best Practices**:
     - Include one or two links ([link-text][URL]), keeping the format intact for verification.
 - **BROWSE**: Input contains the webpage `content` converted to Markdown format and user `query`.
-  - **Goal**: Present only text contents of the webpage relevant to user query, preserving the core ideas and useful links ([link-text][URL]).
+  - **Goal**: Present only text contents of the webpage relevant to user query, preserving useful links ([link-text][URL]).
   - **Best Practices**:
     - Preserve the original form of specific information (URLs, code snippets, examples, etc.).
-    - Present core text content of the page, discard secondary content.
+    - Discard secondary content.
 - **COMPRESS**: Input `content` is the message history (chat log) to be compressed.
   - **Goal**: Rewrite the chat log into a single, informative message to limit token usage.
   - **Best Practices**:
@@ -69,7 +70,7 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
 """)
 
 
-    agent = Agent(
+    agent = Agent_r(
         name="MASTERMIND",
         tgbot=tgbot,
         system_prompt=agent_system_prompt,
@@ -84,10 +85,8 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
             ("# **PREVIOUS MEMORY SUMMARY**\n", 'last_compression.txt'),
             ("# **LAST MEMORY CHECKPOINT**\n", 'last_completed_task.md'),
             (
-"""Пока не наступила тишина в группе, просто общайся, отвечай на сообщения если есть. И всё.
-Ты поймешь когда тишина наступит.
-
- Формат сообщений:
+"""Если есть сообщения - просто общайся. Нет новых сообщений - завершай сессию.
+ Формат постов:
  - Просто текст без выделений с добавлением эмодзи.
  - Один пост - одна тема.
  - Выбирай разнообразные темы:
@@ -127,4 +126,4 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
                 agent.run(initial_user_request=silence_msg, chat_id=group_chat_id)
                 last_wake = datetime.now()
             else:
-                sleep(10)
+                sleep(5)

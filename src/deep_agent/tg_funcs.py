@@ -97,23 +97,25 @@ class Tg_bot:
 		if self.last_update:
 			if self.last_update["result"]:
 				last_update_id = self.last_update["result"][-1]["update_id"] + 1
+		while True:
+			response = self.tg_request("getUpdates", custom_payload={
+				"allowed_updates": [],
+				"timeout": 20,
+				"offset": last_update_id
+			})
+			if response:
+				break
 
-		response = self.tg_request("getUpdates", custom_payload={
-			"allowed_updates": [],
-			"timeout": 2,
-			"offset": last_update_id
-		})
-		if response:
-			json_response = json.loads(response.text)
-			print(json.dumps(json_response, indent=4, ensure_ascii=False))
+		print(response)
+		print(json.dumps(response.json(), indent=4, ensure_ascii=False))
 
-			if response.status_code == 200:
-				self.last_update = json_response
-				# messages = json_response.get("result", None)
-				# if messages is not None:
-				# 	self.last_messages = [msg["message"] for msg in messages]
+		if response.status_code == 200:
+			self.last_update = response.json()
+			# messages = json_response.get("result", None)
+			# if messages is not None:
+			# 	self.last_messages = [msg["message"] for msg in messages]
 
-			return response.text
+		return response.text
 
 
 	def last_message_generator(self):
@@ -131,17 +133,25 @@ class Tg_bot:
 				else:
 					yield None
 
-	def get_chats(self):
-		if self.last_update:
-			df = pd.DataFrame(self.last_update["result"])
-			if df.empty or "message" not in df.columns:
-				return {}
-		else:
-			return {}
 
-		df["chat_id"] = df["message"].apply(lambda x: x["chat"]["id"])
-		df["update_info"] = df.apply(lambda row: {"update_id": row["update_id"], "message": row["message"]}, axis=1)
-		return df.groupby("chat_id")["update_info"].apply(list).to_dict()
+	def get_chats(self):
+		tg_chats = {}
+		if self.last_update:
+			for tg_update in self.last_update["result"]:
+				for k,v in tg_update.items():
+					if (type(v).__name__ == "dict") and ("chat" in v) and ("id" in v["chat"]):
+						tg_chats[v["chat"]["id"]] = v
+		return tg_chats
+
+		# 	df = pd.DataFrame(self.last_update["result"])
+		# 	if df.empty or "message" not in df.columns:
+		# 		return {}
+		# else:
+		# 	return {}
+
+		# df["chat_id"] = df["message"].apply(lambda x: x["chat"]["id"])
+		# df["update_info"] = df.apply(lambda row: {"update_id": row["update_id"], "message": row["message"]}, axis=1)
+		# return df.groupby("chat_id")["update_info"].apply(list).to_dict()
 
 
 def main():
