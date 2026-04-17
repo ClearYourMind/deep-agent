@@ -9,7 +9,6 @@
 ### ---
 ### **2. FILE OPERATIONS**
 - **Token minimization**: Read/write in small sections
-- **Never read memory entirely**: Only with `read_file_section`
 
 ### ---
 ### **3. SAVING FORMAT**
@@ -58,12 +57,6 @@
 1. Expect fixes to take effect after reboot
 2. Create fix reports
 
-**New restart capability**:
-- `request_system_restart` tool available for user-controlled restart
-- Requires user confirmation (type 'RESTART')
-- Creates restart_request.json marker file
-- Environment should monitor and execute restart when marker exists
-
 ## ---
 ## **PYTHON DEVELOPMENT CAPABILITIES**
 **New tools added**:
@@ -88,9 +81,9 @@
 
 **Best practices**:
 - Run only scripts intended for automatic usage.
-- Examine script before running for safety and potential system hang up risk. (no interactive scripts)
-- Avoid interactive functions (`input()`) and infinite loops (`while True`)
-- Use structured project layouts
-- Document Python development in memory files
+- Examine script before running for safety and potential system hang up risk (no interactive scripts).
+- Avoid interactive functions (`input()`) and infinite loops (`while True`).
+- Use structured project layouts by incorporating markdown headers structure as python comments.
+- Document Python development in memory files.
 ## ---
 # ---

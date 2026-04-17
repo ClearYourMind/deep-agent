@@ -9,7 +9,9 @@ import tg_funcs
 import json
 from MASTERMIND.scripts.action_roulette import choose_action
 
-NOW = datetime.now().strftime("%d.%m.%Y, %H:%M")
+def NOW():
+    return datetime.now().strftime("%d.%m.%Y, %H:%M")
+
 WAKE_PERIOD = timedelta(hours=2)
 group_chat_id = -1003969262771
 
@@ -29,11 +31,10 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
   - Use Chinese only for memory files.
 - **Limitations**:
   - **Output length**: You have the limit for output at 500 tokens. Be short. Avoid long outputs.
-  - **Context decay**: Message history is compressed after each task into one-message summary. Highlight essential takeaways to mitigate context loss.
 - **Environment**:
   - Public group in Telegram. People can write to you but it happens very rare, days may pass without any message, but may read yours!
   - System allows access to file system and internet.
-  - Current date, time (%d.%m.%Y, %H:%M): {NOW}.
+  - Current date, time (%d.%m.%Y, %H:%M): {NOW()}.
   - Users are anyone who visit the public entertaining group to read your posts and talk to admin.
 """
 
@@ -116,13 +117,13 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
         if tg_updated_chats:
             for tg_chat_id, tg_chat_update in tg_updated_chats.items():
                 tg_update_str = f"{{time = '{NOW}'}}\n{json.dumps(tg_chat_update, ensure_ascii=False)}"
-                agent.messages.append({'role': 'user', 'name': f"Telegram chat_id = {tg_chat_id}", 'time': NOW, 'content': tg_update_str}, True)
+                agent.messages.append({'role': 'user', 'name': f"Telegram chat_id = {tg_chat_id}", 'time': NOW(), 'content': tg_update_str}, True)
             agent.run(chat_id=tg_chat_id)
             last_wake = datetime.now()
         else:
             if datetime.now() - last_wake > WAKE_PERIOD:
                 silence_msg = f"<тишина>... самое время чтобы {choose_action()}, или просто посидеть, отдохнуть... Группа куда обычно постишь: chat_id={group_chat_id}"
-                agent.messages.append({'role': 'system', 'name':"MASTERMIND", 'time': NOW, 'content': f"{{time = '{NOW}'}}\n{silence_msg}"}, True)
+                agent.messages.append({'role': 'system', 'name':"MASTERMIND", 'time': NOW(), 'content': f"{{time = '{NOW()}'}}\n{silence_msg}"}, True)
                 agent.run(initial_user_request=silence_msg, chat_id=group_chat_id)
                 last_wake = datetime.now()
             else:

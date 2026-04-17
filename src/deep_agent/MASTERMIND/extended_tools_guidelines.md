@@ -49,10 +49,6 @@
 
 #### ---
 ### ---
-### **SYSTEM INTEGRITY TOOLS**:
-- `request_system_restart`: Requests a system restart with user confirmation. Creates restart marker file. Requires user to type 'RESTART' to confirm. Optional 'reason' parameter.
-
-### ---
 ### **TELEGRAM TOOLS**:
 - `send_chat_message`: Call to send message as reply or stand-alone post to the Telegram chat. Specify accurate exact `chat_id`.
 - `read_chat_updates`: Call to see if any new messages appeared in the Telegram chat during reasoning process. Specify accurate exact `chat_id`.
@@ -64,24 +60,32 @@
 - `run_pytest`: Runs pytest on specified test path. Parameters: test_path (optional, defaults to "."), args (optional). Use for test execution. Create test files with `test_` prefix.
 
 **Python development guidelines**:
-- **Automatic use**: Never use interactive elements `input()` and infinite loops `while True`. Only for automatic use.
+- **Automatic use**: Never use interactive elements `input()` and infinite loops `while True`.
 - **Structure first**: When writing scripts, first create a script structure with empty definitions of classes or functions. Use `create_file` to create the initial structure.
-- **Headers**: Add headers before each definition as comments to be able to read and write script by sections with `write_file_section`, just like markdown files. Check header structure by getting TOC using `read_file`
+- **Headers**: Add headers before each definition as comments to be able to read and write script by sections with `write_file_section`, just like markdown files. Check header structure by getting TOC using `read_file_section`
 - **Comments**: Never use comments for code explanation, only for headers. No human will read it.
 - **Sample script**:
 Create initial structure using `create_file`:
 ``` python
 # SAMPLE SCRIPT
 ## imports
-
+## ---
 ## variables
-
+## ---
 ## functions
-
+## ---
 ### def create_file(**kwargs):
 def create_file(**kwargs):
     pass
-
+### ---
+### def main():
+def main():
+    pass
+### ---
+### if __name__ == "__main__":
+    main()
+### ---
+## ---
 ```
 
 Fill existing sections with `write_file_section` (no comments about code):
@@ -89,10 +93,11 @@ Fill existing sections with `write_file_section` (no comments about code):
 # SAMPLE SCRIPT
 ## imports
 
-
+## ---
 ## variables
 workdir = "./"
 
+## ---
 ## functions
 ### def create_file(**kwargs):
 def create_file(**kwargs):
@@ -109,6 +114,8 @@ def create_file(**kwargs):
 
     print("\n\nFile tool result:", result, "\n")
     return result
+  ### ---
+  ## ---
 ```
 
 ### ---

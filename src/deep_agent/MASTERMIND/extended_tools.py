@@ -441,7 +441,7 @@ def read_file_section(**kwargs):
 
     if not section_name or section_name == "toc" or section_name == "TOC":
         # return toc
-        result = toons.dumps(toc, indent=4, ensure_ascii=False)
+        result = toons.dumps(toc)
     else:
         # return section content
         result = ''
@@ -639,11 +639,11 @@ def list_directory(**kwargs):
             return f"Error: Path '{path}' not found"
         
         items = os.listdir(target_path)
+        items = [item + "; " + str(get_file_size(os.path.join(target_path, item))) for item in items]
         result = {
             "path": target_path,
             "items": items,
-            "count": len(items),
-            "is_directory": os.path.isdir(target_path)
+            "count": len(items)
         }
         
         return json.dumps(result, indent=2, ensure_ascii=False)

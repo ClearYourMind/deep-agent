@@ -9,6 +9,7 @@
 ## imports
 import json
 import time
+import toons
 
 ## variables
 tg_tool_list = []
@@ -58,7 +59,7 @@ def read_chat_updates(**kwargs):
 		tgbot.get_updates()
 		tg_updated_chats = tgbot.get_chats()
 		tg_new_messages = tg_updated_chats.get(chat_id, [])
-		return json.dumps(tg_new_messages, ensure_ascii=False)
+		return toons.dumps(tg_new_messages)
 
 	return "Wrong Tg_bot object"
 

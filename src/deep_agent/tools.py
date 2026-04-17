@@ -132,23 +132,23 @@ tool_list = [
             },
         }
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "think",
-            "description": "Use this to record internal reasoning steps without performing any external action. Keep plans, structure, and analysis here — do not write this content to files or output it as the final answer. Optional; you can also reason directly in your response.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "analysis": {
-                        "type": "string",
-                        "description": "Your internal thoughts about the task, plan, or reasoning."
-                    },
-                },
-                "required": ["analysis"]
-            },
-        },
-    },
+    # {
+    #     "type": "function",
+    #     "function": {
+    #         "name": "think",
+    #         "description": "Use this to record internal reasoning steps without performing any external action. Keep plans, structure, and analysis here — do not write this content to files or output it as the final answer. Optional; you can also reason directly in your response.",
+    #         "parameters": {
+    #             "type": "object",
+    #             "properties": {
+    #                 "analysis": {
+    #                     "type": "string",
+    #                     "description": "Your internal thoughts about the task, plan, or reasoning."
+    #                 },
+    #             },
+    #             "required": ["analysis"]
+    #         },
+    #     },
+    # },
     {
         "type": "function",
         "function": {
@@ -171,7 +171,7 @@ tool_list = [
 tool_functions = {
     "search_web": search_web,
     "browse_url": browse_url,
-    "think": think,
+    # "think": think,
     "ask_clarification": ask_clarification,
     **extended_tool_functions,
     **tg_tool_functions
