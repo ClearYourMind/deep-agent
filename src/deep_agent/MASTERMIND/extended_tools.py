@@ -8,19 +8,29 @@ import datetime
 import subprocess
 import sys
 from mrkdwn_analysis import MarkdownAnalyzer
+import toons
 
-
+## ---
 ## module variables
 workdir = 'src/deep_agent/MASTERMIND/'
 extended_tool_list = []
 extended_tool_functions = {}
+MAX_FILE_SIZE = 2048
 
+
+def is_path_safe(path):
+    return not (".." in path or path.startswith("/"))
+
+## ---
 ## functions
 ### def create_file(**kwargs):
 def create_file(**kwargs):
     filename = kwargs["filename"]
     initial_content = kwargs.get("initial_content", "")
     print('arguments:', filename, "content:", initial_content[:20], '...')
+
+    if not is_path_safe(filename):
+        return f"Cannot operate on files outside {workdir} or use absolute paths"
 
     try:
         with open(workdir + filename, 'w') as f:
@@ -57,16 +67,23 @@ extended_tool_list.append({
 )
 
 
+### ---
 ### def append_file(**kwargs):
 def append_file(**kwargs):
     filename = kwargs["filename"]
-    content_portion = kwargs["content_portion"]
-    print('arguments:', filename, "content:", content_portion[:20], '...')
+    section_content = kwargs["section_content"]
+    print('arguments:', filename, "content:", section_content[:20], '...')
     
+    if not is_path_safe(filename):
+        return f"Cannot operate on files outside {workdir} or use absolute paths"
     try:
+        # include placeholder at the end of section
+        if not section_content.strip().endswith('---'):
+            section_content += "\n##### ---\n"
+
         with open(workdir + filename, 'a') as f:
-            f.write(content_portion+'\n')
-        result = f"Content appended to '{filename}' successfully.\nContent portion written:\n{content_portion}"
+            f.write(section_content+'\n')
+        result = f"Content appended to '{filename}' successfully.\nContent portion written:\n{section_content}"
     except Exception as e:
         result = f"Error appending to file: {str(e)}"
 
@@ -78,7 +95,7 @@ extended_tool_list.append({
         "type": "function",
         "function": {
             "name": "append_file",
-            "description": "Appends a portion of content to the end of an existing file.",
+            "description": "Appends a new section to the end of an existing file.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -86,80 +103,109 @@ extended_tool_list.append({
                         "type": "string",
                         "description": "Name of the file to append to."
                     },
-                    "content_portion": {
+                    "section_content": {
                         "type": "string",
-                        "description": "The text to append. Keep each portion relatively short (e.g., a few sentences or a small section)."
+                        "description": "The content of appended section. Keep each section relatively short (20-50 lines)."
                     }
                 },
-                "required": ["filename", "content_portion"]
+                "required": ["filename", "section_content"]
             },
         }
     }
 )
 
+### ---
 ### def edit_file_line(**kwargs):
-def edit_file_line(**kwargs):
-    filename = kwargs["filename"]
-    line_number = kwargs["line_number"]
-    line_content = kwargs["line_content"]
-    print('arguments:', filename, 'line_number', line_number, 'line_content', line_content[:20])
-    
-    try:
-        with open(workdir + filename, 'r') as f:
-            lines = f.readlines()
+        # don't want Agent to use this tool ever
+"""
+    def edit_file_line(**kwargs):
+        filename = kwargs["filename"]
+        line_number = kwargs["line_number"]
+        line_content = kwargs["line_content"]
+        print('arguments:', filename, 'line_number', line_number, 'line_content', line_content[:20])
         
-        if 0 <= line_number < len(lines):
-            lines[line_number] = line_content + '\n'
-            with open(workdir + filename, 'w') as f:
-                f.writelines(lines)
-            result = f"Line {line_number} updated in '{filename}'.\nUpdated line:\n {line_content}"
-        else:
-            result = f"Line number {line_number} out of range"
+        try:
+            with open(workdir + filename, 'r') as f:
+                lines = f.readlines()
+
+            if 0 <= line_number < len(lines):
+                lines[line_number] = line_content + '\n'
+                with open(workdir + filename, 'w') as f:
+                    f.writelines(lines)
+                result = f"Line {line_number} updated in '{filename}'.\nUpdated line:\n {line_content}"
+            else:
+                result = f"Line number {line_number} out of range"
+        except Exception as e:
+            result = f"Error editing file: {str(e)}"
+
+        print("\nFile tool result:", result, "\n\n")
+        return result
+
+        # extended_tool_functions["edit_file_line"] = edit_file_line
+        # extended_tool_list.append({
+        #         "type": "function",
+        #         "function": {
+        #             "name": "edit_file_line",
+        #             "description": "Replaces a specific line in a file with new content. Line numbers start from 0. Use this to correct or update specific lines.",
+        #             "parameters": {
+        #                 "type": "object",
+        #                 "properties": {
+        #                     "filename": {
+        #                         "type": "string",
+        #                         "description": "Name of the file to edit."
+        #                     },
+        #                     "line_number": {
+        #                         "type": "integer",
+        #                         "description": "The line number to replace (0‑based index)."
+        #                     },
+        #                     "line_content": {
+        #                         "type": "string",
+        #                         "description": "The new content for that line."
+        #                     }
+        #                 },
+        #                 "required": ["filename", "line_number", "line_content"]
+        #             },
+        #         }
+        #     }
+        # )
+"""
+
+### ---
+### def get_file_size(file_path):
+def get_file_size(file_path):
+    if not is_path_safe(file_path):
+        return f"Cannot operate on files outside {workdir} or use absolute paths"
+
+    try:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File '{file_path}' does not exist")
+
+        if not os.path.isfile(file_path):
+            raise ValueError(f"'{file_path}' is not a file")
+
+        size = os.path.getsize(file_path)
+        return size
+    except PermissionError:
+        print(f"Permission denied: {file_path}")
+        return None
     except Exception as e:
-        result = f"Error editing file: {str(e)}"
+        print(f"Error getting file size: {e}")
+        return None
 
-    print("\nFile tool result:", result, "\n\n")
-    return result
-
-    # don't want Agent to use this tool ever
-    # extended_tool_functions["edit_file_line"] = edit_file_line
-    # extended_tool_list.append({
-    #         "type": "function",
-    #         "function": {
-    #             "name": "edit_file_line",
-    #             "description": "Replaces a specific line in a file with new content. Line numbers start from 0. Use this to correct or update specific lines.",
-    #             "parameters": {
-    #                 "type": "object",
-    #                 "properties": {
-    #                     "filename": {
-    #                         "type": "string",
-    #                         "description": "Name of the file to edit."
-    #                     },
-    #                     "line_number": {
-    #                         "type": "integer",
-    #                         "description": "The line number to replace (0‑based index)."
-    #                     },
-    #                     "line_content": {
-    #                         "type": "string",
-    #                         "description": "The new content for that line."
-    #                     }
-    #                 },
-    #                 "required": ["filename", "line_number", "line_content"]
-    #             },
-    #         }
-    #     }
-    # )
-
-
+### ---
 ### def load_entire_file(**kwargs):
 def load_entire_file(**kwargs):
     print('arguments:', kwargs["filename"])
-
-    try:
-        with open(workdir + kwargs["filename"]) as f:
-            result = f.read()
-    except Exception as e:
-        result = f"Error reading file: {str(e)}"
+    f_path = workdir + kwargs["filename"]
+    f_size = get_file_size(f_path)
+    if f_size <= MAX_FILE_SIZE:
+        try:
+            with open(f_path) as f:
+                result = f.read()
+        except Exception as e:
+            result = f"Error reading file: {str(e)}"
+    else:
+        result = f"The file is bigger than {MAX_FILE_SIZE} bytes and considered to be too big to load into context."
 
     print("\nFile tool result:", result, "\n\n")
     return result
@@ -169,7 +215,7 @@ extended_tool_list.append(    {
         "type": "function",
         "function": {
             "name": "load_entire_file",
-            "description": "Reads the entire content of a specified file. Use this to retrieve stored memory or information.",
+            "description": f"Reads the entire content of a specified file. Use for files smaller {MAX_FILE_SIZE} bytes.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -184,31 +230,30 @@ extended_tool_list.append(    {
     },
 )
 
-
+### ---
 ### def delete_file(**kwargs):
 def delete_file(**kwargs):
     print('arguments:', kwargs["filename"])
 
     filename = kwargs["filename"]
-    user_reply = input(f"Confirm deletion of {filename} (Y/n)")
-    if user_reply == "Y":
+    if not is_path_safe(filename):
+        return f"Cannot operate on files outside {workdir} or use absolute paths"
+    else:
         try:
             os.remove(workdir + filename)
-            result = f"File '{filename}' deleted"
+            result = f"File '{filename}' has been deleted"
         except Exception as e:
             result = f"Error: {str(e)}"
-    else:
-        result = "User has rejected deletion"
 
     print("File tool result:", result, "\n\n")
     return result
 
 extended_tool_functions["delete_file"] = delete_file
-extended_tool_list.append(    {
+extended_tool_list.append({
         "type": "function",
         "function": {
             "name": "delete_file",
-            "description": "Deletes specified file",
+            "description": f"Deletes specified file. Use only for files in {workdir} and its subfolders",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -229,12 +274,15 @@ def copy_file(**kwargs):
     destination = kwargs["destination"]
     print('arguments: source:', source, "destination:", destination)
 
-    try:
-        import shutil
-        shutil.copy(workdir + source, workdir + destination)
-        result = f"File '{source}' copied to '{destination}'"
-    except Exception as e:
-        result = f"Error copying file: {str(e)}"
+    if not (is_path_safe(source) and is_path_safe(destination)):
+        return f"Cannot operate on files outside {workdir} or use absolute paths"
+    else:
+        try:
+            import shutil
+            shutil.copy(workdir + source, workdir + destination)
+            result = f"File '{source}' copied to '{destination}'"
+        except Exception as e:
+            result = f"Error copying file: {str(e)}"
 
     print("File tool result:", result, "\n\n")
     return result
@@ -263,21 +311,25 @@ extended_tool_list.append(    {
     },
 )
 
+### ---
 ### def rename_file(**kwargs):
 def rename_file(**kwargs):
     old_name = kwargs["old_name"]
     new_name = kwargs["new_name"]
     print('arguments: old_name:', old_name, "new_name:", new_name)
 
-    try:
-        import os
-        os.rename(workdir + old_name, workdir + new_name)
-        result = f"File '{old_name}' renamed to '{new_name}'"
-    except Exception as e:
-        result = f"Error renaming file: {str(e)}"
+    if not (is_path_safe(old_name) and is_path_safe(new_name)):
+        return f"Cannot operate on files outside {workdir} or use absolute paths"
+    else:
+        try:
+            import os
+            os.rename(workdir + old_name, workdir + new_name)
+            result = f"File '{old_name}' renamed to '{new_name}'"
+        except Exception as e:
+            result = f"Error renaming file: {str(e)}"
 
-    print("File tool result:", result, "\n\n")
-    return result
+        print("File tool result:", result, "\n\n")
+        return result
 
 extended_tool_functions["rename_file"] = rename_file
 extended_tool_list.append(    {
@@ -305,6 +357,7 @@ extended_tool_list.append(    {
 
 ### ---
 
+## ---
 ## Chunked file IO functions
 ### def __get_headers_and_lines(markdown_file):
 def __get_headers_and_lines(markdown_file):
@@ -360,36 +413,35 @@ def __make_toc(headers, total_lines):
                 break
             else:
                 suffix_id += 1
-                suffix = f" ({'abcdefghijklmnopqrstuvwxyz'[suffix_id-1]})"
-
+                suffix = f" ({suffix_id})" if suffix_id > 0 else ""
 
     return toc
 
-
+### ---
 ### def read_file_section(**kwargs):
 def read_file_section(**kwargs):
     filename = kwargs["filename"]
     section_name = kwargs.get("section", None)
     print('arguments:', filename, "section:", str(section_name))
 
+    if not is_path_safe(filename):
+        return f"Cannot operate on files outside {workdir} or use absolute paths"
+
     try:
         file_info = __get_headers_and_lines(workdir + filename)
-    except Exception as e:
-        return f"Error: {str(e)}"
 
-    lines = file_info["lines"]
-    line_count = file_info["line_count"]
-    headers = file_info["headers"]
+        lines = file_info["lines"]
+        line_count = file_info["line_count"]
+        headers = file_info["headers"]
 
-    #fill in sections
-    try:
+        #fill in sections
         toc = __make_toc(headers, line_count)
     except KeyError as e:
-        return "[" + filename + " has no markdown header structure. Reading full content]\n\n"+load_entire_file(filename=filename)
+        return "[" + filename + " has no markdown header structure. Try reading full content with load_entire_file]"
 
-    if not section_name:
+    if not section_name or section_name == "toc" or section_name == "TOC":
         # return toc
-        result = json.dumps(toc, indent=4, ensure_ascii=False)
+        result = toons.dumps(toc, indent=4, ensure_ascii=False)
     else:
         # return section content
         result = ''
@@ -428,7 +480,7 @@ extended_tool_list.append(    {
     },
 )
 
-
+### ---
 ### def write_file_section(**kwargs):
 def write_file_section(**kwargs):
     filename = kwargs["filename"]
@@ -436,17 +488,17 @@ def write_file_section(**kwargs):
     content = kwargs["content"]
     print('arguments:', filename, "section:", section_name)
 
+    if not is_path_safe(filename):
+        return f"Cannot operate on files outside {workdir} or use absolute paths"
+
     try:
         file_info = __get_headers_and_lines(workdir + filename)
-    except Exception as e:
-        return f"Error: {str(e)}"
 
-    lines = file_info["lines"]
-    line_count = file_info["line_count"]
-    headers = file_info["headers"]
+        lines = file_info["lines"]
+        line_count = file_info["line_count"]
+        headers = file_info["headers"]
 
-    #fill in sections
-    try:
+        #fill in sections
         toc = __make_toc(headers, line_count)
     except KeyError as e:
         return filename + " has no markdown header structure"
@@ -460,9 +512,12 @@ def write_file_section(**kwargs):
     if not section_header:
             return "Section " + section_name + " is not found. Use exact `name` from TOC"
 
+    # make finishing placeholder with same header level
+    placeholder = section_name[:section_name.find(' ')] + " ---"
+    # place updated section into file
     prefix = lines[0: section_header["start"]]
     postfix = lines[section_header["end"]:]
-    lines = prefix + [content + "\n"]  + postfix
+    lines = prefix + [content + "\n" + placeholder + "\n"]  + postfix
     with open(workdir + filename, 'w') as f:
         f.writelines(lines)
 
@@ -471,7 +526,7 @@ def write_file_section(**kwargs):
     return content
 
 extended_tool_functions["write_file_section"] = write_file_section
-extended_tool_list.append(    {
+extended_tool_list.append({
         "type": "function",
         "function": {
             "name": "write_file_section",
@@ -498,81 +553,9 @@ extended_tool_list.append(    {
     },
 )
 
-
-### def request_system_restart(**kwargs):
-def request_system_restart(**kwargs):
-    print('arguments: request_system_restart')
-    
-    # Safety: require user confirmation
-    user_reply = input("Confirm system restart? This will reload the agent. Type 'RESTART' to confirm: ")
-    
-    if user_reply != "RESTART":
-        result = {
-            "status": "cancelled",
-            "message": "Restart cancelled by user",
-            "timestamp": datetime.datetime.now().isoformat()
-        }
-        print("\nRestart request cancelled by user\n")
-        return json.dumps(result, indent=2, ensure_ascii=False)
-    
-    # Create restart marker with timestamp
-    restart_info = {
-        "requested_at": datetime.datetime.now().isoformat(),
-        "reason": kwargs.get("reason", "user_requested"),
-        "tool_version": "1.0",
-        "status": "pending"
-    }
-    
-    try:
-        # Save restart request marker
-        marker_file = workdir + "restart_request.json"
-        with open(marker_file, 'w') as f:
-            json.dump(restart_info, f, indent=2)
-        
-        result = {
-            "status": "requested",
-            "message": "System restart requested. Environment should reload agent.",
-            "marker_file": "restart_request.json",
-            "restart_info": restart_info,
-            "instructions": "Environment: Please reload MASTERMIND agent with fresh context."
-        }
-        
-        print("\n=== SYSTEM RESTART REQUESTED ===")
-        print("Restart marker saved to: restart_request.json")
-        print("Environment should reload the agent.")
-        print("=================================\n")
-        
-    except Exception as e:
-        result = {
-            "status": "error",
-            "message": f"Failed to create restart marker: {str(e)}",
-            "timestamp": datetime.datetime.now().isoformat()
-        }
-        print(f"\nError creating restart marker: {str(e)}\n")
-    
-    return json.dumps(result, indent=2, ensure_ascii=False)
-
-extended_tool_functions["request_system_restart"] = request_system_restart
-extended_tool_list.append({
-    "type": "function",
-    "function": {
-        "name": "request_system_restart",
-        "description": "Requests a system restart with user confirmation. Creates restart marker file. Requires user to type 'RESTART' to confirm.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "reason": {
-                    "type": "string",
-                    "description": "Optional reason for restart (e.g., 'tool_update', 'memory_refresh', 'user_requested')"
-                }
-            },
-            "required": []
-        },
-    }
-})
-
 ### ---
 
+## ---
 ## Python development tools
 ### def run_python_script(**kwargs):
 def run_python_script(**kwargs):
@@ -580,6 +563,10 @@ def run_python_script(**kwargs):
     args = kwargs.get("args", "")
     print("arguments:", kwargs)
     
+    for arg in args.split():
+        if not is_path_safe(arg):
+            return f"Cannot operate on files outside {workdir} or use absolute paths"
+
     try:
         # Check if file exists in current directory
         if not os.path.exists(os.path.join(workdir, filename)):
@@ -632,17 +619,19 @@ extended_tool_list.append({
     }
 })
 
-
+### ---
 ### def list_directory(**kwargs):
 def list_directory(**kwargs):
     path = kwargs.get("path", ".")
     print('arguments: list_directory path:', path)
-    
+    if not is_path_safe(path):
+        return f"Cannot operate on files outside {workdir} or use absolute paths"
+
     try:
         if path == ".":
             target_path = workdir
-        elif path.startswith("/"):
-            target_path = path
+        # elif path.startswith("/"):
+        #     target_path = path
         else:
             target_path = os.path.join(workdir, path)
         
@@ -681,16 +670,19 @@ extended_tool_list.append({
     }
 })
 
+### ---
 ### def create_directory(**kwargs):
 def create_directory(**kwargs):
     path = kwargs["path"]
     print('arguments: create_directory path:', path)
-    
+    if not is_path_safe(path):
+        return f"Cannot operate on files outside {workdir} or use absolute paths"
+
     try:
-        if path.startswith("/"):
-            target_path = path
-        else:
-            target_path = os.path.join(workdir, path)
+        # if path.startswith("/"):
+        #     target_path = path
+        # else:
+        target_path = os.path.join(workdir, path)
         
         os.makedirs(target_path, exist_ok=True)
         
@@ -701,7 +693,7 @@ def create_directory(**kwargs):
         }
         
         return json.dumps(result, indent=2, ensure_ascii=False)
-        
+
     except Exception as e:
         return f"Error creating directory: {str(e)}"
 
@@ -724,6 +716,7 @@ extended_tool_list.append({
     }
 })
 
+### ---
 ### def install_python_package(**kwargs):
 def install_python_package(**kwargs):
     package = kwargs["package"]
@@ -781,6 +774,7 @@ extended_tool_list.append({
     }
 })
 
+### ---
 ### def run_pytest(**kwargs):
 def run_pytest(**kwargs):
     test_path = kwargs.get("test_path", ".")
@@ -836,3 +830,5 @@ extended_tool_list.append({
 })
 
 ### ---
+## ---
+# ---

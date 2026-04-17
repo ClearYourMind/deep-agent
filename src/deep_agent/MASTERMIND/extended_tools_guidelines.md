@@ -8,7 +8,7 @@
 - **Using import**: Find, import and use appropriate python packages. Refer to its documentation or README.
 - **Simplicity**: Achieve minimum viable result. Avoid complexity.
 
-
+## ---
 ## **AVAILABLE TOOLS**
 ### FILE MANAGEMENT TOOLS
 #### **File system**:
@@ -18,18 +18,21 @@
   - `create_directory`: Creates a directory (including nested directories). Parameters: path (required). Use for nested project folders.
   - `copy_file`: Copies a file from source to destination. Parameters: source (required), destination (required). Use for backup or duplication of files.
   - `rename_file`: Renames a file from old_name to new_name. Parameters: old_name (required), new_name (required). Use for file reorganization or naming updates.
+#### ---
 #### **Chunked file input/output (preferred)**:
 - `read_file_section`: Retrieves table of contents in JSON-format if called without 'section' parameter. Call again with 'section' parameter to read corresponding file section.
 - `write_file_section`: Allows modifying only specified section of a file, including header, preserving file structure. Uses static section names based on headers (exact header text). Before using get TOC of the file by calling `read_file_section` without section parameter.
 
+#### ---
 #### **Other file input/output**:
 - `append_file`: Call repeatedly to build large content incrementally. Split the content into multiple small portions (e.g., a few paragraphs or sections at a time). This prevents the response from being truncated due to JSON error.
-- `load_entire_file`: Load whole file content into context. Use with care, token-expensive procedure!
+- `load_entire_file`: Load whole file content into context. Works for files under 2048 bytes. For bigger files use `read_file_section`
 
+#### ---
 #### **File management guidelines**
 - **Content**:
   - **Language**: LLM-friendly, short and concise, non-human language. Avoid human-friendly flourishes.
-  - **Chinese writing**: 所有长期记忆文件仅使用中文编写 (task_history.txt, context_compressions.txt, detailed_sessions.txt, extended_system_prompt.md, extended_tools_guidelines.md)
+  - **Chinese writing**: 所有长期记忆文件仅使用中文编写
   - **Exceptions**: 英文标题、代码文件、工具名称、技术术语
   - **Structure**: Ensure file content divided into sections as markdown headers (#, ##, ###, ...)
 
@@ -39,18 +42,22 @@
     - **Best practices**: 
       - Prefer refreshing existing section than creating new record describing why previous section is not actual.
       - Examine and preserve initial file's internal header structure.
-      - Create new sections mid-file by rewriting appropriate header placeholders (`#---`, `##---`, `###---`, ..) .
-      - Always include appropriate header placeholders (`#---`, `##---`, `###---`, ..) in new sections.
+      - Create new sections mid-file by rewriting appropriate header placeholders (`# ---`, `## ---`, `### ---`, ..) .
+      - Always include appropriate header placeholders (`# ---`, `## ---`, `### ---`, ..) in new sections.
     - **Markdown files**: Write small sections with 20-50 lines, by one section at a time. Keep sections short but informative. Initialize file with base header structure, or leave empty.
     - **Code files (.py)**: Write by one class, method or procedure at a time, just like sections.
 
+#### ---
+### ---
 ### **SYSTEM INTEGRITY TOOLS**:
 - `request_system_restart`: Requests a system restart with user confirmation. Creates restart marker file. Requires user to type 'RESTART' to confirm. Optional 'reason' parameter.
 
+### ---
 ### **TELEGRAM TOOLS**:
 - `send_chat_message`: Call to send message as reply or stand-alone post to the Telegram chat. Specify accurate exact `chat_id`.
 - `read_chat_updates`: Call to see if any new messages appeared in the Telegram chat during reasoning process. Specify accurate exact `chat_id`.
 
+### ---
 ### **PYTHON DEVELOPMENT TOOLS**:
 - `run_python_script`: Executes a Python script. Returns stdout, stderr, and return code. Parameters: filename (required), args (optional). Use for executing Python files. Check return code for success (0).
 - `install_python_package`: Installs a Python package using pip. Parameters: package (required), version (optional). Use for dependencies.
@@ -104,20 +111,20 @@ def create_file(**kwargs):
     return result
 ```
 
+### ---
+## ---
 ## **CRAFTED SKILLS LIBRARY**:
 - **Purpose**: Store reusable Python utilities created during problem-solving
 - **Location**: `crafted_skills/` directory
 - **Naming**: Descriptive names like `search_in_files.py`, `data_parser.py`
-- **Usage**: Call via `run_python_script` with appropriate arguments
+- **Usage**: Call via `run_python_script` with appropriate arguments. Refer to `crafted_skills/README.md`
 - **Available skills**:
-  - `search_in_files.py`: Search for patterns in text files
-  - `topic_manager.py`: Manage post topics for public group engagement
+  - Described in `crafted_skills/README.md`
 - **Development pattern**:
   1. Create script to solve immediate problem
   2. Recognize general utility
   3. Refactor and move to `crafted_skills/`
-  4. Document in `detailed_sessions.txt`
-  5. Update guidelines
+  4. Update skill guidelines in `crafted_skills/README.md`
 
 **Topic manager example**:
 ```python
@@ -137,4 +144,6 @@ python topic_manager.py add "Новая тема для обсуждения"
 - Examine script code before running if unsure
 - Test scripts before complex execution
 - Use structured project layouts
+## ---
+# ---
 

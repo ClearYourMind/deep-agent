@@ -97,20 +97,17 @@ class Tg_bot:
 		if self.last_update:
 			if self.last_update["result"]:
 				last_update_id = self.last_update["result"][-1]["update_id"] + 1
-		while True:
-			response = self.tg_request("getUpdates", custom_payload={
-				"allowed_updates": [],
-				"timeout": 20,
-				"offset": last_update_id
-			})
-			if response:
-				break
+
+		response = self.tg_request("getUpdates", custom_payload={
+			"allowed_updates": [],
+			"timeout": 2,
+			"offset": last_update_id
+		})
 
 		print(response)
 		print(json.dumps(response.json(), indent=4, ensure_ascii=False))
 
-		if response.status_code == 200:
-			self.last_update = response.json()
+		self.last_update = response.json()
 			# messages = json_response.get("result", None)
 			# if messages is not None:
 			# 	self.last_messages = [msg["message"] for msg in messages]

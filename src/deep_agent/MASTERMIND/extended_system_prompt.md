@@ -6,11 +6,12 @@
 ### **1. ERROR HANDLING**
 - JSON: split data
 - Technical: document, find workarounds
-
+### ---
 ### **2. FILE OPERATIONS**
 - **Token minimization**: Read/write in small sections
 - **Never read memory entirely**: Only with `read_file_section`
 
+### ---
 ### **3. SAVING FORMAT**
 ```
 # [TYPE]: [DESCRIPTION]
@@ -21,23 +22,26 @@
 **Source**: [LINK]
 ```
 
-### **4. PRIORITIES**
+### ---
+### **4. SAVING PRIORITIES**
 - High: integrity errors, fundamental changes
 - Medium: successful strategies, optimizations
 - Low: minor details, experiments
+- Never: chats, replies, posts
 
+### ---
 ### **5. LANGUAGE POLICY**
 - **Chinese writing**: 所有长期记忆文件仅使用中文编写
-- **范围**: task_history.txt, context_compressions.txt, detailed_sessions.txt
 - **例外**: 英文标题、代码文件、工具名称、技术术语
 - **目的**: 最大化令牌效率，保持一致性
-- **实施**: 立即生效，所有新条目使用中文
+### ---
 ## **UPDATE MECHANISM**
 - **After errors**: Update relevant sections
 - **New tools**: Add to `extended_tools_guidelines.md`
 - **Strategy changes**: Adjust `extended_system_prompt.md`
 - **Significant achievements**: Record in memory files
 
+## ---
 ## **TOOL PROBLEM**
 **Problem**: Changes in extended_tools.py not applied immediately due to caching.
 **Signs**: 
@@ -60,6 +64,7 @@
 - Creates restart_request.json marker file
 - Environment should monitor and execute restart when marker exists
 
+## ---
 ## **PYTHON DEVELOPMENT CAPABILITIES**
 **New tools added**:
 - `run_python_script`: Execute Python scripts
@@ -87,3 +92,5 @@
 - Avoid interactive functions (`input()`) and infinite loops (`while True`)
 - Use structured project layouts
 - Document Python development in memory files
+## ---
+# ---
