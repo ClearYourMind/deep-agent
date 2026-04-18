@@ -26,7 +26,7 @@
 #### ---
 #### **Other file input/output**:
 - `append_file`: Call repeatedly to build large content incrementally. Split the content into multiple small portions (e.g., a few paragraphs or sections at a time). This prevents the response from being truncated due to JSON error.
-- `load_entire_file`: Load whole file content into context. Works for files under 2048 bytes. For bigger files use `read_file_section`
+- `load_entire_file`: Load whole file content into context. Works for files under 4096 bytes. For bigger files use `read_file_section`
 
 #### ---
 #### **File management guidelines**
@@ -42,10 +42,10 @@
     - **Best practices**: 
       - Prefer refreshing existing section than creating new record describing why previous section is not actual.
       - Examine and preserve initial file's internal header structure.
-      - Create new sections mid-file by rewriting appropriate header placeholders (`# ---`, `## ---`, `### ---`, ..) .
-      - Always include appropriate header placeholders (`# ---`, `## ---`, `### ---`, ..) in new sections.
+      - Create new sections mid-file by rewriting appropriate header placeholders (`# ---`, `## ---`, `### ---`, ..).
+      - Mark section ends with appropriate header placeholders (`# ---`, `## ---`, `### ---`, ..).
     - **Markdown files**: Write small sections with 20-50 lines, by one section at a time. Keep sections short but informative. Initialize file with base header structure, or leave empty.
-    - **Code files (.py)**: Write by one class, method or procedure at a time, just like sections.
+    - **Code files (.py)**: Write by one class, method or procedure at a time, just like markdown sections.
 
 #### ---
 ### ---
@@ -53,6 +53,11 @@
 - `send_chat_message`: Call to send message as reply or stand-alone post to the Telegram chat. Specify accurate exact `chat_id`.
 - `read_chat_updates`: Call to see if any new messages appeared in the Telegram chat during reasoning process. Specify accurate exact `chat_id`.
 
+### ---
+### **ADVANCED TAVILY BROWSING TOOLS**:
+Uses Tavily search engine, built for AI agents, based on Perplexity.
+- `tavily_search`: Request to the search engine. Use for searching internet or asking anything.
+- `tavily_browse`: Use to extract webpage content at specified URL. Include search query (optional) to get only relevant content.
 ### ---
 ### **PYTHON DEVELOPMENT TOOLS**:
 - `run_python_script`: Executes a Python script. Returns stdout, stderr, and return code. Parameters: filename (required), args (optional). Use for executing Python files. Check return code for success (0).
@@ -74,7 +79,7 @@ Create initial structure using `create_file`:
 ## ---
 ## functions
 ## ---
-### def create_file(**kwargs):
+### create_file:
 def create_file(**kwargs):
     pass
 ### ---
@@ -83,39 +88,37 @@ def main():
     pass
 ### ---
 ### if __name__ == "__main__":
+if __name__ == "__main__":
     main()
 ### ---
 ## ---
 ```
 
 Fill existing sections with `write_file_section` (no comments about code):
+- call `write_file_section`, section="imports", content=
 ``` python
-# SAMPLE SCRIPT
 ## imports
-
+import os
 ## ---
+```
+- call `write_file_section`, section="variables", content=
+``` python
 ## variables
 workdir = "./"
 
 ## ---
-## functions
-### def create_file(**kwargs):
+```
+- call `write_file_section`, section="create_file", content=
+``` python
+### create_file
 def create_file(**kwargs):
     filename = kwargs["filename"]
     initial_content = kwargs.get("initial_content", "")
     print('arguments: filename:', filename, "initial_content:", initial_content)
-
-    try:
-        with open(workdir + filename, 'w') as f:
-            f.write(initial_content)
-        result = initial_content
-    except Exception as e:
-        result = f"Error creating file: {str(e)}"
-
+    ...
     print("\n\nFile tool result:", result, "\n")
     return result
-  ### ---
-  ## ---
+### ---
 ```
 
 ### ---
@@ -135,15 +138,15 @@ def create_file(**kwargs):
 
 **Topic manager example**:
 ```python
-# Get next topic for post
+  # Get next topic for post
 python topic_manager.py next
-# Output: Next topic: Робототехника и военные технологии (ID: military_robotics)
+  # Output: Next topic: Робототехника и военные технологии (ID: military_robotics)
 
-# List all topics
+  # List all topics
 python topic_manager.py list
-# Mark topic as used
+  # Mark topic as used
 python topic_manager.py mark military_robotics
-# Add new topic
+  # Add new topic
 python topic_manager.py add "Новая тема для обсуждения"
 ```
 

@@ -17,7 +17,8 @@ dependencies = [
     "python-telegram-bot (>=22.7,<23.0)",
     "httpx[socks] (>=0.28.1,<0.29.0)",
     "pandas (>=3.0.2,<4.0.0)",
-    "toons (>=0.5.4,<0.6.0)"
+    "toons (>=0.5.4,<0.6.0)",
+    "tavily-python (>=0.7.23,<0.8.0)"
 ]
 
 [tool.poetry]

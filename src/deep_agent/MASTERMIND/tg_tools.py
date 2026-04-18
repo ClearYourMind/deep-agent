@@ -54,9 +54,9 @@ tg_tool_list.append({
 def read_chat_updates(**kwargs):
 	chat_id = kwargs['chat_id']
 	tgbot = kwargs["tg_bot"]
-	time.sleep(CHAT_REFRESH_TIME)
+	# time.sleep(CHAT_REFRESH_TIME)
 	if tgbot:
-		tgbot.get_updates()
+		tgbot.get_updates(CHAT_REFRESH_TIME)
 		tg_updated_chats = tgbot.get_chats()
 		tg_new_messages = tg_updated_chats.get(chat_id, [])
 		return toons.dumps(tg_new_messages)

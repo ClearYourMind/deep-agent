@@ -1,8 +1,8 @@
 from deepseek_agent import Agent
 from deepseek_reasoner_agent import Agent as Agent_r
-import tools
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+import tools
 import questionary
 from time import sleep
 import tg_funcs
@@ -111,7 +111,7 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
     while True:
         # msg = questionary.text("Ask your question: ").ask()
         # msg = next(tg_messages)
-        tgbot.get_updates()
+        tgbot.get_updates(100)
         tg_updated_chats = tgbot.get_chats()
 
         if tg_updated_chats:

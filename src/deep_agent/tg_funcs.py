@@ -92,7 +92,7 @@ class Tg_bot:
 			return True
 
 
-	def get_updates(self):
+	def get_updates(self, timeout=2):
 		last_update_id = 0
 		if self.last_update:
 			if self.last_update["result"]:
@@ -100,19 +100,19 @@ class Tg_bot:
 
 		response = self.tg_request("getUpdates", custom_payload={
 			"allowed_updates": [],
-			"timeout": 2,
+			"timeout": timeout,
 			"offset": last_update_id
 		})
 
 		print(response)
-		print(json.dumps(response.json(), indent=4, ensure_ascii=False))
+		if response:
+			print(json.dumps(response.json(), indent=4, ensure_ascii=False))
 
-		self.last_update = response.json()
-			# messages = json_response.get("result", None)
-			# if messages is not None:
-			# 	self.last_messages = [msg["message"] for msg in messages]
-
-		return response.text
+			self.last_update = response.json()
+			return response.text
+		else:
+			self.last_update = None
+			return None
 
 
 	def last_message_generator(self):

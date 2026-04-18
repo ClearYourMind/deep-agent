@@ -15,7 +15,7 @@ import toons
 workdir = 'src/deep_agent/MASTERMIND/'
 extended_tool_list = []
 extended_tool_functions = {}
-MAX_FILE_SIZE = 2048
+MAX_FILE_SIZE = 4096
 
 
 def is_path_safe(path):

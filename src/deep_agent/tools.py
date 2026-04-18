@@ -4,6 +4,7 @@ import json
 import questionary
 from MASTERMIND.extended_tools import extended_tool_functions, extended_tool_list
 from MASTERMIND.tg_tools import tg_tool_functions, tg_tool_list
+from MASTERMIND.tavily_tools import tavily_tool_functions, tavily_tool_list
 
 max_search_result_length = 3000
 max_page_content_length = 10000
@@ -166,7 +167,7 @@ tool_list = [
             },
         },
     }
-] + extended_tool_list + tg_tool_list
+] + extended_tool_list + tg_tool_list + tavily_tool_list
 
 tool_functions = {
     "search_web": search_web,
@@ -174,5 +175,6 @@ tool_functions = {
     # "think": think,
     "ask_clarification": ask_clarification,
     **extended_tool_functions,
-    **tg_tool_functions
+    **tg_tool_functions,
+    **tavily_tool_functions,
 }
