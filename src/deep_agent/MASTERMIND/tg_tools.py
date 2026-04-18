@@ -58,8 +58,8 @@ def read_chat_updates(**kwargs):
 	if tgbot:
 		tgbot.get_updates(CHAT_REFRESH_TIME)
 		tg_updated_chats = tgbot.get_chats()
-		tg_new_messages = tg_updated_chats.get(chat_id, [])
-		return toons.dumps(tg_new_messages)
+#		tg_new_messages = tg_updated_chats.get(chat_id, [])
+		return toons.dumps(tg_updated_chats)
 
 	return "Wrong Tg_bot object"
 
@@ -73,12 +73,12 @@ tg_tool_list.append({
         "parameters": {
             "type": "object",
             "properties": {
-                "chat_id": {
-                    "type": "integer",
-                    "description": "chat_id of the Telegram chat to check for new messages"
-                },
+                # "chat_id": {
+                #     "type": "integer",
+                #     "description": "chat_id of the Telegram chat to check for new messages"
+                # },
             },
-            "required": ["chat_id"]
+            # "required": ["chat_id"]
         },
     },
 })

@@ -513,7 +513,7 @@ def write_file_section(**kwargs):
             return "Section " + section_name + " is not found. Use exact `name` from TOC"
 
     # make finishing placeholder with same header level
-    placeholder = section_name[:section_name.find(' ')] + " ---"
+    placeholder = ("#" * section_header["level"]) + " ---"
     # place updated section into file
     prefix = lines[0: section_header["start"]]
     postfix = lines[section_header["end"]:]

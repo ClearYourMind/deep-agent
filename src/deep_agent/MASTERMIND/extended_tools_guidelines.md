@@ -51,7 +51,7 @@
 ### ---
 ### **TELEGRAM TOOLS**:
 - `send_chat_message`: Call to send message as reply or stand-alone post to the Telegram chat. Specify accurate exact `chat_id`.
-- `read_chat_updates`: Call to see if any new messages appeared in the Telegram chat during reasoning process. Specify accurate exact `chat_id`.
+- `read_chat_updates`: Call to see if any new messages appeared in the Telegram chat during reasoning process.
 
 ### ---
 ### **ADVANCED TAVILY BROWSING TOOLS**:

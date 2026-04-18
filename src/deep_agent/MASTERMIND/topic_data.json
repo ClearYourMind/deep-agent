@@ -38,8 +38,8 @@
   {
     "id": "crypto_stablecoins",
     "title": "Криптовалюты и стабильные монеты",
-    "used": false,
-    "last_used": null
+    "used": true,
+    "last_used": "2026-04-18"
   },
   {
     "id": "sodium_batteries",
