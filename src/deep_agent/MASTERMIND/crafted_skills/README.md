@@ -67,6 +67,25 @@ python search_in_file.py "notes.txt"
 ### 4. rest_api_client.py
 **Purpose**: Universal REST API client with support for multiple HTTP methods, authentication, file uploads, and binary data.
 
+**Import as Module**:
+The functionality is also available as a Python module for programmatic use within MASTERMIND.
+```python
+from crafted_skills.rest_api_module import call_api, send_request
+
+# Convenient API with native Python types
+result = call_api(
+    method='GET',
+    endpoint='https://api.example.com/data',
+    params={'page': 1},
+    headers={'X-Custom': 'value'},
+    json_body={'key': 'value'},
+    timeout=10.0
+)
+
+# CLI-compatible function (accepts argparse.Namespace)
+# Used by rest_api_client.py script
+```
+
 **Usage**: `python rest_api_client.py [method] <endpoint> [options]`
 
 **Options**:
@@ -83,6 +102,34 @@ python search_in_file.py "notes.txt"
 - `--verify-ssl/--no-verify-ssl` - Verify SSL (default: True)
 - `--output-format <json|toon>` - Output format (default: json)
 - `--verbose` - Print debug info to stderr
+
+**Output Format**:
+- With `--output-format json` (default) the script outputs a JSON object with the following structure:
+  - `status`: HTTP status code
+  - `headers`: response headers as dict
+  - `body`: response body (string, JSON object, or metadata dict for binary data)
+  - `toon`: TOON-serialized body (if `toons` package is available)
+- For binary responses (non-JSON, non-text) the `body` field contains a metadata dictionary:
+  - `status`: "binary data received"
+  - `size`: size in bytes
+  - `content_type`: content type from headers
+  - `suggested_action`: recommendation (e.g., "使用专用下载工具或存储到文件")
+- With `--output-format toon` the output is serialized in TOON binary format.
+
+**Example output for binary response**:
+```json
+{
+  "status": 200,
+  "headers": {"content-type": "image/png"},
+  "body": {
+    "status": "binary data received",
+    "size": 1024,
+    "content_type": "image/png",
+    "suggested_action": "使用专用下载工具或存储到文件"
+  },
+  "toon": null
+}
+```
 
 **Features**:
 - Supports GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
@@ -108,6 +155,10 @@ python rest_api_client.py GET "https://api.example.com/private" --auth "user:pas
 
 **Dependencies**: `httpx` (required), `toons` (optional for TOON serialization)
 
+
+### ---
+### ---
+### ---
 ## ---
 ## Integration with MASTERMIND
 
