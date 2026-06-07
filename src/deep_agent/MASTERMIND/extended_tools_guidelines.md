@@ -42,7 +42,7 @@
     - **Best practices**: 
       - Prefer refreshing existing section than creating new record describing why previous section is not actual.
       - Examine and preserve initial file's internal header structure.
-      - Create new sections mid-file by rewriting appropriate header placeholders (`# ---`, `## ---`, `### ---`, ..). Ignore numeration
+      - Create new sections mid-file by rewriting appropriate header placeholders (`---`). Ignore numeration
       - Mark section ends with appropriate header placeholders (`# ---`, `## ---`, `### ---`, ..).
     - **Markdown files**: Write small sections with 20-50 lines, by one section at a time. Keep sections short but informative. Initialize file with base header structure, or leave empty.
     - **Code files (.py)**: Write by one class, method or procedure at a time, just like markdown sections.

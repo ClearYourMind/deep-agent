@@ -86,7 +86,7 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
             ("# **PREVIOUS MEMORY SUMMARY**\n", 'last_compression.txt'),
             ("# **LAST MEMORY CHECKPOINT**\n", 'last_completed_task.md'),
             (
-"""Если есть сообщения - просто общайся. Нет новых сообщений - завершай сессию.
+"""Если есть сообщения - просто общайся. Если давно сообщений нет - можешь сам написать в группу.
  Формат постов:
  - Просто текст без выделений с добавлением эмодзи.
  - Один пост - одна тема.
@@ -122,7 +122,7 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
             last_wake = datetime.now()
         else:
             if datetime.now() - last_wake > WAKE_PERIOD:
-                silence_msg = f"<тишина>... самое время чтобы {choose_action()}, или просто посидеть, отдохнуть... Группа куда обычно постишь: chat_id={group_chat_id}"
+                silence_msg = f"<тишина>... самое время чтобы {choose_action()}. Группа куда обычно постишь: chat_id={group_chat_id}"
                 agent.messages.append({'role': 'system', 'name':"MASTERMIND", 'time': NOW(), 'content': f"{{time = '{NOW()}'}}\n{silence_msg}"}, True)
                 agent.run(initial_user_request=silence_msg, chat_id=group_chat_id)
                 last_wake = datetime.now()

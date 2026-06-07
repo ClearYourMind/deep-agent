@@ -4,7 +4,7 @@ import os
 
 def choose_action():
 	try:
-		with open('scripts/heartbeat_actions.txt', 'r', encoding='utf-8') as f:
+		with open('src/deep_agent/MASTERMIND/scripts/heartbeat_actions.txt', 'r', encoding='utf-8') as f:
 			heartbeat_actions = [line.strip() for line in f.readlines() if line.strip()]
 		
 		if not heartbeat_actions:

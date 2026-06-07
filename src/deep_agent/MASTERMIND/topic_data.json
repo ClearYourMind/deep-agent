@@ -44,8 +44,8 @@
   {
     "id": "sodium_batteries",
     "title": "Натрий-ионные батареи",
-    "used": false,
-    "last_used": null
+    "used": true,
+    "last_used": "2026-04-22"
   },
   {
     "id": "brain_computer",

@@ -59,7 +59,7 @@ def read_chat_updates(**kwargs):
 		tgbot.get_updates(CHAT_REFRESH_TIME)
 		tg_updated_chats = tgbot.get_chats()
 #		tg_new_messages = tg_updated_chats.get(chat_id, [])
-		return toons.dumps(tg_updated_chats)
+		return json.dumps(tg_updated_chats, indent=4, ensure_ascii=False)
 
 	return "Wrong Tg_bot object"
 
