@@ -18,7 +18,7 @@ from MASTERMIND.rest_api_tools import rest_api_tool_functions, rest_api_tool_lis
 workdir = 'src/deep_agent/MASTERMIND/'
 extended_tool_list = tg_tool_list + tavily_tool_list + rest_api_tool_list
 extended_tool_functions = {**tg_tool_functions, **tavily_tool_functions, **rest_api_tool_functions}
-MAX_FILE_SIZE = 4096
+MAX_FILE_SIZE = 16384
 
 
 def is_path_safe(path):

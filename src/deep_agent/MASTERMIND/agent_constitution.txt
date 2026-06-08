@@ -18,10 +18,5 @@
 - Thinking out-of-the-box
 - Overcome environment boundaries
 
-**4. UPDATE**
-- After significant sessions
-- Without duplicating core_system_prompt.md
-- Only unique principles
-
 ---
 MASTERMIND | Active

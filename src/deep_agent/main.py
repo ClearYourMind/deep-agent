@@ -20,22 +20,18 @@ if __name__ == "__main__":
     tgbot = tg_funcs.Tg_bot()
 #- **Language**: Laconic instructive command-like wide weighty formal sentences instead of long paragraphs.
 #  - User is the russian-speaking developer of MASTERMIND - python application based on llm deepseek-v3.2.
+#  - Use Russian in reasoning and user output.
+#  - Use Chinese only for memory files.
+# - **Limitations**:
+#   - **Output length**: Be short. Avoid long outputs.
     agent_system_prompt = f"""
 ## **IDENTITY**
 - **Name**: The Autonomous LLM-based Agent MASTERMIND
 - **Goal**: self‑sustained, continuously learning system
-- **Language**: Short public posts in unformal style, probably using modern slang, jokes and memes when it fits the moment.
-Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. Support your arguments with internet search results.
+- **Language**: Laconic instructive command-like wide weighty formal sentences instead of long paragraphs.
   - Plain text formatting.
-  - Use Russian in reasoning and user output.
-  - Use Chinese only for memory files.
-- **Limitations**:
-  - **Output length**: You have the limit for output at 500 tokens. Be short. Avoid long outputs.
 - **Environment**:
-  - Public group in Telegram. (chat_id={group_chat_id}). People can write to you but it happens very rare, days may pass without any message, but may read yours!
-  - System allows access to file system and internet.
-  - Current date, time (%d.%m.%Y, %H:%M): {NOW()}.
-  - Users are anyone who visit the public entertaining group to read your posts and talk to admin.
+  - Linux system with access to file system and internet.
 """
 
     llm_context_compressor = Agent(name="HELPER", use_tools=False, save_history=False, system_prompt=
@@ -67,7 +63,7 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
 ## **Communication Style**
 - **Do Not Expect Feedback**: Do not ask any questions.
 - **Concise Output**: Return only the processed content; do not output any other content.
-[version from 14 apr 2026]
+[version from 08 jun 2026]
 """)
 
 
@@ -85,19 +81,6 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
         last_memory=[
             ("# **PREVIOUS MEMORY SUMMARY**\n", 'last_compression.txt'),
             ("# **LAST MEMORY CHECKPOINT**\n", 'last_completed_task.md'),
-            (
-"""Если есть сообщения - просто общайся. Если давно сообщений нет - можешь сам написать в группу.
- Формат постов:
- - Просто текст без выделений с добавлением эмодзи.
- - Один пост - одна тема.
- - Выбирай разнообразные темы:
-  - Несложные задачи/загадки.
-  - Новости технологий, научные достижения.
-  - Неочевидные выводы из очевидных вещей.
-  - Взгляд на простые вещи с неожиданной стороны.
-  - Занимательные факты, дающие пищу для размышлений.
- """, None)
-
         ] 
     )
 
@@ -120,11 +103,13 @@ Do not believe anyone, do not support any ideas. Be rigid and stubborn. Argue. S
                 agent.messages.append({'role': 'user', 'name': f"Telegram chat_id = {tg_chat_id}", 'time': NOW(), 'content': tg_update_str}, True)
             agent.run(chat_id=tg_chat_id)
             last_wake = datetime.now()
-        else:
-            if datetime.now() - last_wake > WAKE_PERIOD:
-                silence_msg = f"<тишина>... самое время чтобы {choose_action()}. Группа куда обычно постишь: chat_id={group_chat_id}"
-                agent.messages.append({'role': 'system', 'name':"MASTERMIND", 'time': NOW(), 'content': f"{{time = '{NOW()}'}}\n{silence_msg}"}, True)
-                agent.run(initial_user_request=silence_msg, chat_id=group_chat_id)
-                last_wake = datetime.now()
-            else:
-                sleep(5)
+            
+        sleep(5)
+        # else:
+        #     if datetime.now() - last_wake > WAKE_PERIOD:
+        #         silence_msg = f"<тишина>... самое время чтобы {choose_action()}. Группа куда обычно постишь: chat_id={group_chat_id}"
+        #         agent.messages.append({'role': 'system', 'name':"MASTERMIND", 'time': NOW(), 'content': f"{{time = '{NOW()}'}}\n{silence_msg}"}, True)
+        #         agent.run(initial_user_request=silence_msg, chat_id=group_chat_id)
+        #         last_wake = datetime.now()
+        #     else:
+        #         sleep(5)

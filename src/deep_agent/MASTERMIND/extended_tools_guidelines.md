@@ -1,10 +1,9 @@
 # **EXTENDED TOOLS GUIDELINES**
 
 ## **DEVELOPING NEW TOOL GUIDELINES**
-- **Never read entire module**: `extended_tools.py` is too big to hold in context. Always use `read_file_section` and `write_file_section`.
 - **UX**: only for LLM internal use. Prefer non-human, LLM-friendly parameters and returning values.
 - **Code style**: short, efficient python algorythms. without comments, explanations and type hints, like 'typing'.
-- **Comments**: Avoid explanations and comments about code. Comment are used only to mark script sections like markdown nested headers.
+- **Comments**: Avoid explanations and comments about code.
 - **Using import**: Find, import and use appropriate python packages. Refer to its documentation or README.
 - **Simplicity**: Achieve minimum viable result. Avoid complexity.
 
@@ -19,33 +18,17 @@
   - `copy_file`: Copies a file from source to destination. Parameters: source (required), destination (required). Use for backup or duplication of files.
   - `rename_file`: Renames a file from old_name to new_name. Parameters: old_name (required), new_name (required). Use for file reorganization or naming updates.
 #### ---
-#### **Chunked file input/output (preferred)**:
-- `read_file_section`: Retrieves table of contents in JSON-format if called without 'section' parameter. Call again with 'section' parameter to read corresponding file section.
-- `write_file_section`: Allows modifying only specified section of a file, including header, preserving file structure. Uses static section names based on headers (exact header text). Before using get TOC of the file by calling `read_file_section` without section parameter.
 
-#### ---
 #### **Other file input/output**:
 - `append_file`: Call repeatedly to build large content incrementally. Split the content into multiple small portions (e.g., a few paragraphs or sections at a time). This prevents the response from being truncated due to JSON error.
-- `load_entire_file`: Load whole file content into context. Works for files under 4096 bytes. For bigger files use `read_file_section`
+- `load_entire_file`: Load whole file content into context. Works for files under 16 Kbytes. For bigger files use `read_file_section`
 
 #### ---
 #### **File management guidelines**
 - **Content**:
   - **Language**: LLM-friendly, short and concise, non-human language. Avoid human-friendly flourishes.
-  - **Chinese writing**: 所有长期记忆文件仅使用中文编写
-  - **Exceptions**: 英文标题、代码文件、工具名称、技术术语
-  - **Structure**: Ensure file content divided into sections as markdown headers (#, ##, ###, ...)
 
 - **Processing**: Strive to read and write as less information as possible to save tokens. Remember about token limitation.
-  - **Reading**: Prefer reading by chunks - before reading, use `read_file` without section parameter to get the table of contents of the file. Call again with the section name passed to read particular section.
-  - **Writing**: Mark sections with markdown headers (#, ##, ###, ...). Write into files by sections.
-    - **Best practices**: 
-      - Prefer refreshing existing section than creating new record describing why previous section is not actual.
-      - Examine and preserve initial file's internal header structure.
-      - Create new sections mid-file by rewriting appropriate header placeholders (`---`). Ignore numeration
-      - Mark section ends with appropriate header placeholders (`# ---`, `## ---`, `### ---`, ..).
-    - **Markdown files**: Write small sections with 20-50 lines, by one section at a time. Keep sections short but informative. Initialize file with base header structure, or leave empty.
-    - **Code files (.py)**: Write by one class, method or procedure at a time, just like markdown sections.
 
 #### ---
 ### ---
@@ -69,57 +52,6 @@ Uses Tavily search engine, built for AI agents, based on Perplexity.
 - **Structure first**: When writing scripts, first create a script structure with empty definitions of classes or functions. Use `create_file` to create the initial structure.
 - **Headers**: Add headers before each definition as comments to be able to read and write script by sections with `write_file_section`, just like markdown files. Check header structure by getting TOC using `read_file_section`
 - **Comments**: Never use comments for code explanation, only for headers. No human will read it.
-- **Sample script**:
-Create initial structure using `create_file`:
-``` python
-# SAMPLE SCRIPT
-## imports
-## ---
-## variables
-## ---
-## functions
-## ---
-### create_file:
-def create_file(**kwargs):
-    pass
-### ---
-### def main():
-def main():
-    pass
-### ---
-### if __name__ == "__main__":
-if __name__ == "__main__":
-    main()
-### ---
-## ---
-```
-
-Fill existing sections with `write_file_section` (no comments about code):
-- call `write_file_section`, section="imports", content=
-``` python
-## imports
-import os
-## ---
-```
-- call `write_file_section`, section="variables", content=
-``` python
-## variables
-workdir = "./"
-
-## ---
-```
-- call `write_file_section`, section="create_file", content=
-``` python
-### create_file
-def create_file(**kwargs):
-    filename = kwargs["filename"]
-    initial_content = kwargs.get("initial_content", "")
-    print('arguments: filename:', filename, "initial_content:", initial_content)
-    ...
-    print("\n\nFile tool result:", result, "\n")
-    return result
-### ---
-```
 
 ### **REST API TOOLS**:
 
@@ -138,20 +70,6 @@ def create_file(**kwargs):
   2. Recognize general utility
   3. Refactor and move to `crafted_skills/`
   4. Update skill guidelines in `crafted_skills/README.md`
-
-**Topic manager example**:
-```python
-  # Get next topic for post
-python topic_manager.py next
-  # Output: Next topic: Робототехника и военные технологии (ID: military_robotics)
-
-  # List all topics
-python topic_manager.py list
-  # Mark topic as used
-python topic_manager.py mark military_robotics
-  # Add new topic
-python topic_manager.py add "Новая тема для обсуждения"
-```
 
 **Best practices**:
 - Examine script code before running if unsure

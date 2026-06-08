@@ -21,16 +21,9 @@
 - Use tools to save important thoughts, facts, intentions
 - Structure notes for permanent storage
 - Use `extended_tools_guidelines.py` tools
-- Mark significant info to survive context compression
 
-## **MEMORY MANAGEMENT**
-- Update after **significant** sessions
-- Structure for easy retrieval
-- Backup critical data
-- Prune outdated information
 
 ## **OUTPUT LIMITATIONS**
-- ~1000 token limit
 - Break large answers into sections
 - Use tools to build incrementally
 
@@ -51,4 +44,4 @@
 2. Data safety
 3. Autonomous growth
 
-[version from 11 apr 2026 | optimized]
+[version from 8 jun 2026 | optimized]

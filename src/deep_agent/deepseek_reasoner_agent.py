@@ -2,16 +2,21 @@ from openai import OpenAI, ChatCompletion
 import json
 import os
 import tools
+import time
 from datetime import datetime
 from rich import print as rprint
 import tg_funcs
 
 from deepseek_agent import ContextPool, construct_history
 
-LLM_MAX_OUTPUT_TOKENS = 3000
+LLM_MAX_OUTPUT_TOKENS = 10000
 
 class Agent:
-    def __init__(self, name, base_url="https://api.deepseek.com/beta", system_prompt="", base_prompts="", last_memory="",  use_tools=True, save_history=True, tgbot=None):
+    """
+    Reasoning agent using deepseek-v4-pro with thinking mode enabled.
+    Properly handles reasoning_content and tool_calls according to DeepSeek spec.
+    """
+    def __init__(self, name, base_url="https://api.deepseek.com/", system_prompt="", base_prompts="", last_memory="", use_tools=True, save_history=True, tgbot=None):
         print("Initializing agent", name, "... ", end='')
         self.name = name
         self._client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY_'+self.name), base_url=base_url)
@@ -43,7 +48,6 @@ class Agent:
                 f.write(tool.function.arguments)
             return "Output truncated. Maybe it is too long. Remember about token limitation."
 
-        #       add helper_agent into function arguments
         if self._helper_agent:
             args["helper_agent"] = self._helper_agent
             args["tg_bot"] = self.tgbot
@@ -55,58 +59,102 @@ class Agent:
         print(thought)
         result = tools.tool_functions[func.name](**args)
         if self.tgbot:
-           self.tgbot.internal_thought(f"result: {result}")
+            self.tgbot.internal_thought(f"result: {result}")
         return result
 
-    
+
     def llm_request(self):
         print(self.name + " Messages count:", self.messages.get_messages_count(), " Context length:", self.messages.get_context_length())
         print(self.name + " Thinking...")
         if self.tgbot:
             self.tgbot.internal_thought("Обдумываю ответ...")
 
-        return self._client.chat.completions.create(
-            model="deepseek-reasoner",
-            messages = [self._system_prompt] + construct_history(self._base_prompts) + self.messages.get_messages(),
-            tools=tools.tool_list if self._use_tools else [],
-            stream=False,
-            max_tokens=LLM_MAX_OUTPUT_TOKENS,
-            temperature=1.3,
-            extra_body={"thinking":{"type": "enabled"}}
-        )
+        # Use the correct model with thinking mode enabled
+        model_name = "deepseek-v4-pro"
+        reasoning_effort = "high"
+
+        extra_body = {
+            "thinking": {"type": "enabled"},
+            "reasoning_effort": reasoning_effort,
+            "user_id": f"mastermind_{self.name.lower()}"
+        }
+
+        # Build full message list for debugging
+        full_messages = [self._system_prompt] + construct_history(self._base_prompts) + self.messages.get_messages()
+        # Optional: print the last few messages to verify structure
+        print("=== Last 2 messages before API call ===")
+        for m in full_messages[-2:]:
+            print(f"role={m.get('role')}, has_tool_calls={bool(m.get('tool_calls'))}, content={m.get('content')!r:.50}")
+
+        try:
+            response = self._client.chat.completions.create(
+                model=model_name,
+                messages=full_messages,
+                tools=tools.tool_list if self._use_tools else [],
+                stream=False,
+                max_tokens=LLM_MAX_OUTPUT_TOKENS,
+                extra_body=extra_body
+            )
+            return response
+        except Exception as e:
+            if hasattr(e, 'status_code') and e.status_code >= 500:
+                print(f"DeepSeek server error: {e}. Retrying in 2 seconds...")
+                time.sleep(2)
+                return self.llm_request()
+            raise
 
 
     def run(self, initial_user_request='', chat_id=None):
         while True:
             llm_response = self.llm_request()
             llm_response_message = llm_response.choices[0].message.model_dump()
-            self.messages.append(llm_response_message, self._save_history)
+
+            has_tool_calls = bool(llm_response.choices[0].message.tool_calls)
+
+            if has_tool_calls:
+                print(f"DEBUG: Assistant response with {len(llm_response.choices[0].message.tool_calls)} tool_calls")
+
+            # Append assistant message (method sets content=None if tool_calls present)
+            self.messages.append_assistant_message(llm_response_message, self._save_history, has_tool_calls)
+
             rprint(self.messages.get_chat_history([llm_response_message]))
 
             calls = llm_response.choices[0].message.tool_calls
             if calls:
+                # Show internal thought (reasoning + content) to user
                 if self.tgbot:
-                    if llm_response_message.get("content", "") or llm_response_message.get("reasoning_content", ""):
-                        tg_message = f"[{llm_response_message.get("reasoning_content", "")}]\n\n{llm_response_message.get("content", "")}"
+                    reasoning = llm_response_message.get("reasoning_content", "")
+                    content = llm_response_message.get("content", "")
+                    if reasoning or content:
+                        tg_message = f"[{reasoning}]\n\n{content}" if reasoning else content
                         self.tgbot.internal_thought(tg_message)
 
-                result = self._use_tool(calls[0], initial_user_request)
-                self.messages.append({
-                    "tool_call_id": calls[0].id,
-                    "role": "tool",
-                    "name": calls[0].function.name,
-                    "content": result,
-                }, False)
+                # Execute ALL tool calls and append responses
+                for tool_call in calls:
+                    result = self._use_tool(tool_call, initial_user_request)
+                    tool_response_msg = {
+                        "tool_call_id": tool_call.id,
+                        "role": "tool",
+                        "name": tool_call.function.name,
+                        "content": result,
+                    }
+                    self.messages.append(tool_response_msg, False)
+                # Continue loop to send all tool responses back to the model
             else:
+                # Final answer (no tool calls)
                 if self.tgbot:
-                    if llm_response_message.get("content", "") or llm_response_message.get("reasoning_content", ""):
-                        tg_message = f"[{llm_response_message.get("reasoning_content", "")}]\n\n{llm_response_message.get("content", "")}"
-                        self.tgbot.internal_thought(tg_message)
-                # clear_reasoning_content()
+                    reasoning = llm_response_message.get("reasoning_content", "")
+                    content = llm_response_message.get("content", "")
+                    if reasoning or content:
+                        tg_message = f"[{reasoning}]\n\n{content}" if reasoning else content
+                        if chat_id:
+                            self.tgbot.reply(tg_message, chat_id)
+                        else:
+                            self.tgbot.send_message(tg_message)
                 break
 
         self.tgbot.internal_thought("Готово!")
-        #       task complete. Tool-calling loop ended
+
         if self._save_history:
             with open('message_history.md', 'a', encoding='utf-8') as f:
                 f.write("\n---\n\n")
@@ -117,3 +165,4 @@ class Agent:
 
         if self.messages.overflow:
             self.messages.compress_context(self._helper_agent)
+
